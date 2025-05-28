@@ -1,15 +1,15 @@
 /* General Body and Container Styling */
 body {
-    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; /* Modern, clean font */
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
-    background: linear-gradient(135deg, #e0f2f7 0%, #c2e0f0 100%); /* Light blue gradient background */
+    background: linear-gradient(135deg, #e0f2f7 0%, #c2e0f0 100%);
     margin: 0;
     padding: 20px;
     box-sizing: border-box;
-    color: #333; /* Default text color */
+    color: #333;
 }
 
 /* Screen Containers (for welcome, selection, main sim) */
@@ -25,51 +25,51 @@ body {
 }
 
 /* Main Simulator Specific Container (retains flex layout) */
-.container { /* This targets #mainSimulatorScreen via ID, but uses .container class */
+.container {
     display: flex;
-    gap: 25px; /* Slightly more space between panels */
-    background-color: #ffffff; /* Pure white for clean panels */
-    padding: 30px; /* More generous padding */
-    border-radius: 12px; /* Softer rounded corners */
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* More pronounced shadow */
-    max-width: 1280px; /* Slightly wider max-width */
+    gap: 25px;
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    max-width: 1280px;
     width: 100%;
-    flex-wrap: wrap; /* Allow panels to wrap to new line on smaller screens */
-    border: 1px solid rgba(255, 255, 255, 0.6); /* Subtle light border */
+    flex-wrap: wrap;
+    border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 /* Panel Styling */
 .simulator-panel, .practice-abgs-panel {
-    flex: 1; /* Allows panels to grow and shrink */
-    padding: 25px; /* Consistent padding */
-    border: none; /* Remove individual panel borders */
-    border-radius: 10px; /* Slightly smaller border-radius than container */
-    background-color: #fcfcfc; /* Very light grey for panels */
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05); /* Inner shadow for depth */
-    min-width: 320px; /* Ensure panels don't get too narrow */
+    flex: 1;
+    padding: 25px;
+    border: none;
+    border-radius: 10px;
+    background-color: #fcfcfc;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+    min-width: 320px;
 }
 
 h1, h2 {
-    color: #0056b3; /* Darker blue for headings */
+    color: #0056b3;
     text-align: center;
     margin-bottom: 25px;
-    font-weight: 600; /* Slightly bolder headings */
+    font-weight: 600;
 }
 
 /* Settings Inputs and Buttons */
 .settings label {
     display: block;
-    margin-bottom: 8px; /* More space */
+    margin-bottom: 8px;
     font-weight: 600;
     color: #444;
     font-size: 0.95em;
 }
 
 .settings input[type="number"] {
-    width: calc(100% - 24px); /* Account for padding and border */
-    padding: 12px; /* Larger input fields */
-    margin-bottom: 20px; /* More space below inputs */
-    border: 1px solid #cce0ec; /* Softer border color */
+    width: calc(100% - 24px);
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #cce0ec;
     border-radius: 6px;
     box-sizing: border-box;
     font-size: 1em;
@@ -78,56 +78,56 @@ h1, h2 {
 
 .settings input[type="number"]:focus {
     border-color: #007bff;
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.2); /* Subtle focus glow */
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
     outline: none;
 }
 
 .settings button {
     display: block;
     width: 100%;
-    padding: 12px 15px; /* Larger padding for button */
-    background: linear-gradient(45deg, #007bff, #0056b3); /* Blue gradient button */
+    padding: 12px 15px;
+    background: linear-gradient(45deg, #007bff, #0056b3);
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 1.1em; /* Larger font */
+    font-size: 1.1em;
     font-weight: 600;
     transition: all 0.3s ease;
-    letter-spacing: 0.5px; /* Slightly more spaced letters */
+    letter-spacing: 0.5px;
 }
 
 .settings button:hover {
-    background: linear-gradient(45deg, #0056b3, #007bff); /* Reverse gradient on hover */
-    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3); /* Lifted shadow on hover */
+    background: linear-gradient(45deg, #0056b3, #007bff);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
 
 /* ABG Results Display */
 .abg-results {
-    margin-top: 35px; /* More space */
+    margin-top: 35px;
     padding-top: 25px;
-    border-top: 1px dashed #e0e0e0; /* Dashed line for subtle separation */
+    border-top: 1px dashed #e0e0e0;
 }
 
 .abg-results p {
-    font-size: 1.15em; /* Slightly larger font */
+    font-size: 1.15em;
     margin-bottom: 10px;
 }
 
 .abg-results span {
     font-weight: bold;
-    color: #007bff; /* Consistent blue for values */
-    font-size: 1.1em; /* Slightly larger for emphasis */
+    color: #007bff;
+    font-size: 1.1em;
 }
 
 /* Scenario Display */
 #scenarioDisplay {
-    background-color: #e9f7ff; /* Lighter blue for scenario box */
+    background-color: #e9f7ff;
     border: 1px solid #cce7ff;
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 25px;
-    line-height: 1.6; /* Better readability */
+    line-height: 1.6;
 }
 
 #scenarioDisplay p {
@@ -137,7 +137,7 @@ h1, h2 {
 }
 
 #scenarioDisplay strong {
-    color: #0056b3; /* Emphasize strong tags in scenario */
+    color: #0056b3;
 }
 
 
@@ -148,32 +148,32 @@ h1, h2 {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4); /* Slightly lighter overlay */
-    backdrop-filter: blur(8px); /* Nice blur effect */
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    animation: fadeIn 0.3s ease-out; /* Smooth fade-in */
+    animation: fadeIn 0.3s ease-out;
 }
 
 .overlay-content {
-    background: linear-gradient(180deg, #ffffff, #f0f8ff); /* Subtle white to light blue gradient */
-    padding: 40px; /* More generous padding */
+    background: linear-gradient(180deg, #ffffff, #f0f8ff);
+    padding: 40px;
     border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); /* Stronger shadow */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     text-align: center;
-    max-width: 550px; /* Slightly wider */
+    max-width: 550px;
     width: 90%;
     box-sizing: border-box;
-    border: 1px solid rgba(255, 255, 255, 0.8); /* White border for pop-up */
-    animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Bounce-in effect */
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 
 .overlay-content h2 {
     margin-top: 0;
     color: #0056b3;
-    font-size: 2em; /* Larger heading */
+    font-size: 2em;
     margin-bottom: 15px;
 }
 
@@ -184,7 +184,7 @@ h1, h2 {
 }
 
 .overlay-content input[type="text"] {
-    width: calc(100% - 24px); /* Account for padding and border */
+    width: calc(100% - 24px);
     padding: 12px;
     margin: 20px 0;
     border: 1px solid #cce0ec;
@@ -200,21 +200,23 @@ h1, h2 {
 }
 
 .overlay-content button {
-    padding: 12px 30px; /* More padding */
-    font-size: 1.15em; /* Larger font */
+    padding: 12px 30px;
+    font-size: 1.15em;
     font-weight: 600;
 }
 
 /* Feedback Popup Specific Styles */
 .feedback-content {
-    max-width: 700px; /* Even wider for feedback details */
+    max-width: 700px;
     text-align: left;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .feedback-content h3 {
     color: #0056b3;
     margin-top: 25px;
-    border-bottom: 2px solid #e0f2f7; /* Thicker, softer border */
+    border-bottom: 2px solid #e0f2f7;
     padding-bottom: 10px;
     font-size: 1.4em;
     font-weight: 600;
@@ -227,16 +229,68 @@ h1, h2 {
 }
 
 .feedback-details {
-    background-color: #f7fcff; /* Very light blue background for details */
+    background-color: #f7fcff;
     border-radius: 8px;
     padding: 20px;
     margin-top: 20px;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03); /* Subtle inner shadow */
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
 }
 
 .feedback-details p strong {
     color: #007bff;
 }
+
+/* Styles for ABG Comparison Container and Boxes */
+.abg-comparison-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.abg-box {
+    flex: 1;
+    min-width: 250px;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.abg-box h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+.abg-box p {
+    font-size: 0.95em;
+    margin-bottom: 5px;
+}
+.abg-box span {
+    font-weight: bold;
+}
+
+.initial-abg-box {
+    background-color: #fff0f0;
+    border-left: 4px solid #ffcccc;
+}
+.initial-abg-box h4 {
+    color: #c0392b;
+}
+
+
+.corrected-abg-box {
+    background-color: #e6ffed;
+    border-left: 4px solid #b3ffc6;
+}
+.corrected-abg-box h4 {
+    color: #27ae60;
+}
+
 
 .feedback-content ul {
     list-style-type: disc;
@@ -257,19 +311,19 @@ h1, h2 {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 15px; /* More space between buttons */
+    gap: 15px;
 }
 
 .feedback-buttons button {
     flex-grow: 1;
-    min-width: 160px; /* Minimum width for buttons */
+    min-width: 160px;
     padding: 12px 20px;
     font-size: 1.05em;
     font-weight: 600;
 }
 
 #nextScenarioBtn {
-    background: linear-gradient(45deg, #28a745, #218838); /* Green gradient */
+    background: linear-gradient(45deg, #28a745, #218838);
 }
 #nextScenarioBtn:hover {
     background: linear-gradient(45deg, #218838, #28a745);
@@ -277,7 +331,7 @@ h1, h2 {
 }
 
 #repeatScenarioBtn {
-    background: linear-gradient(45deg, #6c757d, #5a6268); /* Grey gradient */
+    background: linear-gradient(45deg, #6c757d, #5a6268);
 }
 #repeatScenarioBtn:hover {
     background: linear-gradient(45deg, #5a6268, #6c757d);
@@ -285,7 +339,7 @@ h1, h2 {
 }
 
 #backToSelectionBtn {
-    background: linear-gradient(45deg, #17a2b8, #138496); /* Teal gradient */
+    background: linear-gradient(45deg, #17a2b8, #138496);
 }
 #backToSelectionBtn:hover {
     background: linear-gradient(45deg, #138496, #17a2b8);
@@ -318,42 +372,47 @@ h1, h2 {
 
 .scenario-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 25px;
     width: 100%;
-    max-width: 1000px; /* Limit grid width */
+    max-width: 1000px;
     margin-top: 20px;
 }
 
 .scenario-card {
-    background-color: #f0faff; /* Light blue card background */
-    padding: 25px;
+    /* background-color is set by JS via inline style */
+    padding: 25px; /* Restored padding */
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    text-align: left;
+    text-align: left; /* Text aligned to the left */
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
     border: 1px solid #cce0ec;
+    /* Removed display:flex and related properties */
 }
 
 .scenario-card:hover {
-    transform: translateY(-5px); /* Lift effect on hover */
+    transform: translateY(-5px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    background-color: #e6f7ff; /* Slightly darker blue on hover */
+    /* Consider a consistent hover effect if background-color varies widely, e.g., a border highlight or brightness change */
 }
 
+/* .scenario-image class removed */
+
 .scenario-card h3 {
-    color: #0056b3;
+    color: #0056b3; /* Default color, may need adjustment for very dark dynamic backgrounds */
     margin-top: 0;
     margin-bottom: 15px;
     font-size: 1.4em;
     font-weight: 600;
+    /* text-align: left; (inherits from .scenario-card) */
 }
 
 .scenario-card p {
     font-size: 0.9em;
-    color: #666;
+    color: #555; /* Default color, may need adjustment for very dark dynamic backgrounds */
     line-height: 1.5;
+    /* text-align: left; (inherits from .scenario-card) */
 }
 
 /* --- Animations --- */
@@ -366,6 +425,24 @@ h1, h2 {
     from { transform: scale(0.8); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
+
+/* Back to Scenario Selection Button from Sim Screen */
+#backToScenarioSelectionFromSimBtn {
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ccc;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+    margin-top: 20px;
+}
+
+#backToScenarioSelectionFromSimBtn:hover {
+    background-color: #e0e0e0;
+}
+
 
 /* --- Media Queries for Mobile Adjustments --- */
 @media (max-width: 768px) {
@@ -388,6 +465,11 @@ h1, h2 {
         padding: 25px;
         width: 95%;
     }
+     .feedback-content {
+        max-width: 95%;
+        padding: 20px;
+    }
+
 
     .overlay-content h2, #scenarioWelcomeTitle {
         font-size: 1.6em;
@@ -405,9 +487,18 @@ h1, h2 {
     .feedback-content p, .feedback-content ul li {
         font-size: 0.9em;
     }
+    
+    .abg-comparison-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .abg-box {
+        min-width: 100%;
+    }
+
 
     .feedback-buttons {
-        flex-direction: column; /* Stack buttons vertically on small screens */
+        flex-direction: column;
         gap: 10px;
     }
 
@@ -417,28 +508,19 @@ h1, h2 {
     }
 
     .scenario-grid {
-        grid-template-columns: 1fr; /* Single column on very small screens */
+        grid-template-columns: 1fr;
         gap: 15px;
     }
 
     .scenario-card {
-        padding: 20px;
+        padding: 20px; /* Adjusted padding for smaller cards */
+        text-align: left; /* Ensure text is left-aligned on mobile too */
     }
 
     .scenario-card h3 {
         font-size: 1.2em;
     }
-}#backToScenarioSelectionFromSimBtn {
-    background-color: #f0f0f0; /* Light grey background */
-    color: #333; /* Dark text */
-    border: 1px solid #ccc; /* Light grey border */
-    padding: 10px 20px; /* Comfortable padding */
-    border-radius: 5px; /* Slightly rounded corners */
-    cursor: pointer; /* Indicate it's clickable */
-    font-size: 16px; /* Readable font size */
-    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
-}
-
-#backToScenarioSelectionFromSimBtn:hover {
-    background-color: #e0e0e0; /* Slightly darker grey on hover */
+     .scenario-card p {
+        font-size: 0.85em;
+    }
 }

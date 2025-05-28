@@ -44,7 +44,6 @@
                 <p>pH: <span id="phResult"></span></p>
                 <p>PaCO2: <span id="paco2Result"></span> mmHg</p>
                 <p>PaO2: <span id="pao2Result"></span> mmHg</p>
-                <p>HCO3: <span id="hco3Result"></span> mEq/L</p>
                 <p>Tidal Volume (Vt): <span id="vtResult"></span> mL</p>
             </div>
         </div>
@@ -53,7 +52,7 @@
             <h2>Practice ABG Scenarios</h2>
             <div id="scenarioDisplay">
                 <p><strong>Scenario for RT <span id="rtNamePlaceholder"></span>:</strong> <span id="scenarioText"></span></p>
-                <p>Initial ABG: pH <span id="initialPH"></span>, PaCO2 <span id="initialPaCO2"></span>, PaO2 <span id="initialPaO2"></span>, HCO3 <span id="initialHCO3"></span></p>
+                <p>Initial ABG: pH <span id="initialPH"></span>, PaCO2 <span id="initialPaCO2"></span>, PaO2 <span id="initialPaO2"></span></p>
             </div>
             <button id="backToScenarioSelectionFromSimBtn" style="margin-top: 20px;">Back to Scenario Selection</button> </div>
     </div>
@@ -66,14 +65,33 @@
                 <h3>Settings Comparison:</h3>
                 <p><strong>Initial Settings (Scenario Preset):</strong> IPAP <span id="initialIpapFb"></span>, EPAP <span id="initialEpapFb"></span>, FiO2 <span id="initialFio2Fb"></span>%</p>
                 <p><strong>Your Final Settings:</strong> IPAP <span id="finalIpapFb"></span>, EPAP <span id="finalEpapFb"></span>, FiO2 <span id="finalFio2Fb"></span>%</p>
-                <h3>Impact of Your Changes:</h3>
+
+                <h3 style="margin-top: 20px;">ABG Comparison:</h3>
+                <div class="abg-comparison-container">
+                    <div class="abg-box initial-abg-box">
+                        <h4>Initial ABG (Problem State)</h4>
+                        <p>pH: <span id="initialAbgPhFb"></span></p>
+                        <p>PaCO2: <span id="initialAbgPaco2Fb"></span> mmHg</p>
+                        <p>PaO2: <span id="initialAbgPao2Fb"></span> mmHg</p>
+                    </div>
+                    <div class="abg-box corrected-abg-box">
+                        <h4>Your Corrected ABG</h4>
+                        <p>pH: <span id="finalAbgPhFb"></span></p>
+                        <p>PaCO2: <span id="finalAbgPaco2Fb"></span> mmHg</p>
+                        <p>PaO2: <span id="finalAbgPao2Fb"></span> mmHg</p>
+                        <p>Est. Tidal Volume (Vt): <span id="finalAbgVtFb"></span> mL</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 20px;">Impact of Your Changes:</h3>
                 <ul id="impactList">
-                    </ul>
+                </ul>
             </div>
             <div class="feedback-buttons">
                 <button id="nextScenarioBtn">Next Scenario</button>
                 <button id="repeatScenarioBtn">Repeat Current Scenario</button>
-                <button id="backToSelectionBtn">Back to Scenario Selection</button> </div>
+                <button id="backToSelectionBtn">Back to Scenario Selection</button>
+            </div>
         </div>
     </div>
 
