@@ -84,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const BASE_VT = 300;
         const VT_PER_PS = 50;
         let simulatedVt = BASE_VT + (currentPs * VT_PER_PS);
-        simulatedVt = Math.round(Math.max(150, Math.min(1200, simulatedVt)));
+        // MODIFIED: Tidal volume capped at 1000 mL
+        simulatedVt = Math.round(Math.max(150, Math.min(1000, simulatedVt))); //
 
         const paco2ChangeFactor = 7;
         let paco2Change = (initialPsScenario - currentPs) * paco2ChangeFactor;
@@ -126,91 +127,91 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "COPD Exacerbation with Acute Respiratory Acidosis",
             shortDescription: "Manage a patient with severe COPD exacerbation and high CO2.",
             initial: { pH: 7.28, paco2: 65, pao2: 55 },
-            initialBIPAP: { ipap: 12, epap: 5, fio2: 40 },
+            initialBIPAP: { ipap: 12, epap: 5, fio2: 40 }, // PS 7 -> Vt 650
             text: "A 68-year-old male with severe COPD is admitted with acute exacerbation. He's dyspneic, using accessory muscles, and is on BIPAP with the shown settings. His current ABG reflects significant respiratory acidosis and hypoxemia. As RT {name}, your task is to adjust BIPAP settings to improve his ventilation and oxygenation."
         },
         {
             name: "Acute Hypoxemic Respiratory Failure (Pneumonia)",
             shortDescription: "Improve oxygenation in a patient with severe pneumonia.",
             initial: { pH: 7.42, paco2: 38, pao2: 45 },
-            initialBIPAP: { ipap: 15, epap: 8, fio2: 60 },
+            initialBIPAP: { ipap: 15, epap: 8, fio2: 60 }, // PS 7 -> Vt 650
             text: "A 55-year-old female with severe pneumonia is experiencing acute hypoxemic respiratory failure. Despite high FiO2 and EPAP on BIPAP with the shown settings, she remains significantly hypoxemic. Her ventilation is adequate. As RT {name}, adjust settings to improve oxygenation without causing hyperventilation."
         },
         {
             name: "Hypercapnic Respiratory Failure (CHF Exacerbation)",
             shortDescription: "Correct severe hypercapnia in a heart failure patient.",
             initial: { pH: 7.25, paco2: 71, pao2: 65 },
-            initialBIPAP: { ipap: 18, epap: 6, fio2: 30 },
+            initialBIPAP: { ipap: 18, epap: 6, fio2: 30 }, // PS 12 -> Vt 900
             text: "A 72-year-old male with acute decompensated heart failure is in severe hypercapnic respiratory failure, currently on BIPAP with the shown settings. He is breathing rapidly but unable to clear CO2 effectively. As RT {name}, improve his ventilation to correct the acidosis and support his breathing."
         },
         {
             name: "Post-Extubation Respiratory Distress",
             shortDescription: "Support breathing and prevent re-intubation after extubation.",
             initial: { pH: 7.32, paco2: 52, pao2: 70 },
-            initialBIPAP: { ipap: 14, epap: 6, fio2: 50 },
+            initialBIPAP: { ipap: 14, epap: 6, fio2: 50 }, // PS 8 -> Vt 700
             text: "A 45-year-old patient, recently extubated, is showing signs of respiratory distress with mild hypercapnia and hypoxemia, currently on BIPAP with the shown settings. As RT {name}, optimize settings to support his breathing and prevent re-intubation."
         },
         {
             name: "COPD Exacerbation with Severe Hypoxemia",
             shortDescription: "Manage a COPD patient with critically low oxygen and moderate CO2 retention.",
             initial: { pH: 7.33, paco2: 58, pao2: 42 },
-            initialBIPAP: { ipap: 14, epap: 7, fio2: 50 },
+            initialBIPAP: { ipap: 14, epap: 7, fio2: 50 }, // PS 7 -> Vt 650
             text: "A 71-year-old female with a long history of COPD presents to the ED with worsening shortness of breath and cyanosis. She is alert but struggling to speak in full sentences. Current BIPAP settings are shown. As RT {name}, your priority is to rapidly improve her oxygenation while managing her ventilation."
         },
         {
             name: "Aspiration Pneumonia with Respiratory Acidosis",
             shortDescription: "Treat a patient with aspiration pneumonia leading to poor oxygenation and high CO2.",
             initial: { pH: 7.26, paco2: 70, pao2: 50 },
-            initialBIPAP: { ipap: 16, epap: 6, fio2: 60 },
+            initialBIPAP: { ipap: 16, epap: 6, fio2: 60 }, // PS 10 -> Vt 800
             text: "A 60-year-old male with a recent stroke and dysphagia developed aspiration pneumonia. He is lethargic and tachypneic. Initial BIPAP settings are applied. As RT {name}, focus on improving both oxygenation and ventilation to correct the severe respiratory acidosis."
         },
         {
             name: "Cardiogenic Pulmonary Edema (CHF) with Mild Hypercapnia",
             shortDescription: "Support a heart failure patient with pulmonary edema and developing CO2 retention.",
             initial: { pH: 7.31, paco2: 55, pao2: 60 },
-            initialBIPAP: { ipap: 12, epap: 8, fio2: 70 },
+            initialBIPAP: { ipap: 12, epap: 8, fio2: 70 }, // PS 4 -> Vt 500
             text: "A 78-year-old male with known congestive heart failure (CHF) is admitted with acute dyspnea, bilateral crackles, and frothy sputum. He is on BIPAP as shown. While oxygenation is a concern, he is also starting to retain CO2. As RT {name}, adjust settings to improve gas exchange and reduce work of breathing."
         },
         {
             name: "Obesity Hypoventilation Syndrome (OHS) - Acute on Chronic",
             shortDescription: "Manage acute respiratory failure in a patient with OHS.",
             initial: { pH: 7.25, paco2: 80, pao2: 48 },
-            initialBIPAP: { ipap: 20, epap: 10, fio2: 40 },
+            initialBIPAP: { ipap: 20, epap: 10, fio2: 40 }, // PS 10 -> Vt 800
             text: "A 52-year-old patient with a BMI of 45 and diagnosed Obesity Hypoventilation Syndrome is admitted with somnolence and severe respiratory distress. Current BIPAP settings are high but may need adjustment. As RT {name}, your goal is to significantly improve ventilation and normalize pH, being mindful of their chronic CO2 retention."
         },
         {
             name: "Post-Operative Atelectasis with Hypoxemia",
             shortDescription: "Address hypoxemia in a post-surgical patient due to lung collapse.",
             initial: { pH: 7.43, paco2: 40, pao2: 58 },
-            initialBIPAP: { ipap: 10, epap: 5, fio2: 50 },
+            initialBIPAP: { ipap: 10, epap: 5, fio2: 50 }, // PS 5 -> Vt 550
             text: "A 65-year-old patient, 2 days post-abdominal surgery, is found to be hypoxemic with diminished breath sounds at the bases. Chest X-ray suggests bibasilar atelectasis. BIPAP is initiated with the displayed settings. As RT {name}, optimize settings to recruit alveoli and improve oxygenation."
         },
         {
             name: "Severe Asthma Exacerbation with Impending Fatigue",
             shortDescription: "Support a severe asthmatic with significant airflow obstruction and rising CO2.",
             initial: { pH: 7.29, paco2: 62, pao2: 65 },
-            initialBIPAP: { ipap: 15, epap: 5, fio2: 40 },
+            initialBIPAP: { ipap: 15, epap: 5, fio2: 40 }, // PS 10 -> Vt 800
             text: "A 30-year-old known asthmatic is in severe distress with minimal air entry despite continuous nebulizers. They are tiring, and their CO2 is rising. BIPAP has been started. As RT {name}, adjust settings to reduce work of breathing and improve ventilation, carefully monitoring for air trapping."
         },
         {
             name: "Pulmonary Embolism with Mild Respiratory Alkalosis & Hypoxemia",
             shortDescription: "Manage hypoxemia in a patient with PE who is tachypneic.",
             initial: { pH: 7.48, paco2: 32, pao2: 55 },
-            initialBIPAP: { ipap: 10, epap: 6, fio2: 60 },
+            initialBIPAP: { ipap: 10, epap: 6, fio2: 60 }, // PS 4 -> Vt 500
             text: "A 58-year-old patient presents with sudden onset chest pain and severe dyspnea. A pulmonary embolism is suspected and later confirmed. The patient is tachypneic. BIPAP is initiated primarily for hypoxemia. As RT {name}, optimize oxygenation. Be aware that high pressures may not be well-tolerated if hemodynamically unstable."
         },
         {
             name: "Sleep Apnea Patient on Home CPAP Admitted with Respiratory Infection",
             shortDescription: "Transition a home CPAP user to BIPAP due to acute illness and increased WOB.",
             initial: { pH: 7.30, paco2: 60, pao2: 52 },
-            initialBIPAP: { ipap: 12, epap: 8, fio2: 45 },
+            initialBIPAP: { ipap: 12, epap: 8, fio2: 45 }, // PS 4 -> Vt 500
             text: "A 62-year-old male who uses CPAP at 8 cmH2O nightly for OSA is admitted with a severe chest infection. He is now showing signs of respiratory fatigue and CO2 retention, requiring more support than his CPAP can provide. As RT {name}, adjust BIPAP settings to manage his acute respiratory compromise."
         },
         {
             name: "Near-Drowning with Hypoxemic Respiratory Failure",
             shortDescription: "Manage severe hypoxemia after a near-drowning incident.",
             initial: { pH: 7.36, paco2: 37, pao2: 40 },
-            initialBIPAP: { ipap: 14, epap: 10, fio2: 100 },
+            initialBIPAP: { ipap: 14, epap: 10, fio2: 100 }, // PS 4 -> Vt 500
             text: "A 25-year-old was rescued from a near-drowning incident and presents with severe hypoxemia and signs of pulmonary edema. They are on 100% FiO2 via BIPAP. As RT {name}, your focus is to optimize oxygenation using IPAP and EPAP, considering potential for ARDS development."
         }
     ];
@@ -223,9 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     if (scenarios.length > scenarioColors.length) {
         console.warn("Not enough unique colors defined for the number of scenarios. Colors may repeat.");
-        // Optionally, add more colors to scenarioColors or implement a more dynamic color generation
         for(let i = scenarioColors.length; i < scenarios.length; i++) {
-            scenarioColors.push(`#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`); // Add random colors if not enough
+            scenarioColors.push(`#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`);
         }
     }
 
@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getRandomColor(index) { // Kept for dynamic card colors
-        return scenarioColors[index % scenarioColors.length]; // Use modulo to cycle through colors if not enough
+        return scenarioColors[index % scenarioColors.length];
     }
 
     function generateScenarioCards() {
@@ -329,9 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.classList.add('scenario-card');
             card.dataset.index = index;
-            card.style.backgroundColor = getRandomColor(index); // Set dynamic background color
-
-            // Image creation and appending removed
+            card.style.backgroundColor = getRandomColor(index);
 
             const title = document.createElement('h3');
             title.textContent = scenario.name;
@@ -371,24 +369,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     submitBtn.addEventListener('click', () => {
-        const ipap = parseFloat(ipapInput.value);
-        const epap = parseFloat(epapInput.value);
-        const fio2 = parseFloat(fio2Input.value);
+        const ipapString = ipapInput.value;
+        const epapString = epapInput.value;
+        const fio2String = fio2Input.value;
 
-        if (isNaN(ipap) || isNaN(epap) || isNaN(fio2) || ipap < epap) {
-            alert('Please enter valid numbers for IPAP, EPAP, and FiO2. IPAP must be greater than or equal to EPAP.');
+        // MODIFIED: Validate for whole numbers
+        if (!/^\d+$/.test(ipapString) || !/^\d+$/.test(epapString) || !/^\d+$/.test(fio2String)) {
+            alert('IPAP, EPAP, and FiO2 values must be whole numbers.');
             return;
         }
-        if (ipap < 4 || ipap > 30) {
-            alert('IPAP should be between 4 and 30 cmH2O.');
+
+        const ipap = parseInt(ipapString, 10);
+        const epap = parseInt(epapString, 10);
+        const fio2 = parseInt(fio2String, 10);
+
+        // Validate IPAP >= EPAP
+        if (ipap < epap) {
+            alert('IPAP must be greater than or equal to EPAP.');
             return;
         }
-        if (epap < 4 || epap > 20) {
-            alert('EPAP should be between 4 and 20 cmH2O.');
+
+        // Validate ranges
+        if (ipap < 4 || ipap > 30) { //
+            alert('IPAP should be between 4 and 30 cmH2O.'); //
             return;
         }
-        if (fio2 < 21 || fio2 > 100) {
-            alert('FiO2 should be between 21% and 100%.');
+        if (epap < 4 || epap > 20) { //
+            alert('EPAP should be between 4 and 20 cmH2O.'); //
+            return;
+        }
+        if (fio2 < 21 || fio2 > 100) { //
+            alert('FiO2 should be between 21% and 100%.'); //
             return;
         }
 
