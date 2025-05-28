@@ -12,7 +12,20 @@ body {
     color: #333; /* Default text color */
 }
 
-.container {
+/* Screen Containers (for welcome, selection, main sim) */
+.screen-container {
+    width: 100%;
+    max-width: 1200px;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* Main Simulator Specific Container (retains flex layout) */
+.container { /* This targets #mainSimulatorScreen via ID, but uses .container class */
     display: flex;
     gap: 25px; /* Slightly more space between panels */
     background-color: #ffffff; /* Pure white for clean panels */
@@ -21,13 +34,13 @@ body {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* More pronounced shadow */
     max-width: 1280px; /* Slightly wider max-width */
     width: 100%;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* Allow panels to wrap to new line on smaller screens */
     border: 1px solid rgba(255, 255, 255, 0.6); /* Subtle light border */
 }
 
 /* Panel Styling */
 .simulator-panel, .practice-abgs-panel {
-    flex: 1;
+    flex: 1; /* Allows panels to grow and shrink */
     padding: 25px; /* Consistent padding */
     border: none; /* Remove individual panel borders */
     border-radius: 10px; /* Slightly smaller border-radius than container */
@@ -271,10 +284,76 @@ h1, h2 {
     box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
 }
 
+#backToSelectionBtn {
+    background: linear-gradient(45deg, #17a2b8, #138496); /* Teal gradient */
+}
+#backToSelectionBtn:hover {
+    background: linear-gradient(45deg, #138496, #17a2b8);
+    box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+}
 
-/* Initial state: Hide main content until name is entered */
-.container {
-    display: none; /* Will be set to 'flex' by JS after login */
+
+/* Initial state: Hide main simulator content until selected */
+#mainSimulatorScreen {
+    display: none;
+}
+
+/* --- Scenario Grid Styles --- */
+#scenarioSelectionScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#scenarioWelcomeTitle {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.scenario-intro-text {
+    font-size: 1.2em;
+    color: #555;
+    margin-bottom: 30px;
+}
+
+.scenario-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid */
+    gap: 25px;
+    width: 100%;
+    max-width: 1000px; /* Limit grid width */
+    margin-top: 20px;
+}
+
+.scenario-card {
+    background-color: #f0faff; /* Light blue card background */
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    border: 1px solid #cce0ec;
+}
+
+.scenario-card:hover {
+    transform: translateY(-5px); /* Lift effect on hover */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    background-color: #e6f7ff; /* Slightly darker blue on hover */
+}
+
+.scenario-card h3 {
+    color: #0056b3;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.4em;
+    font-weight: 600;
+}
+
+.scenario-card p {
+    font-size: 0.9em;
+    color: #666;
+    line-height: 1.5;
 }
 
 /* --- Animations --- */
@@ -294,10 +373,9 @@ h1, h2 {
         padding: 10px;
     }
 
-    .container {
-        flex-direction: column;
-        gap: 15px;
+    .container, .screen-container {
         padding: 15px;
+        gap: 15px;
     }
 
     .simulator-panel, .practice-abgs-panel {
@@ -311,7 +389,7 @@ h1, h2 {
         width: 95%;
     }
 
-    .overlay-content h2 {
+    .overlay-content h2, #scenarioWelcomeTitle {
         font-size: 1.6em;
     }
 
@@ -337,4 +415,30 @@ h1, h2 {
         width: 100%;
         min-width: unset;
     }
+
+    .scenario-grid {
+        grid-template-columns: 1fr; /* Single column on very small screens */
+        gap: 15px;
+    }
+
+    .scenario-card {
+        padding: 20px;
+    }
+
+    .scenario-card h3 {
+        font-size: 1.2em;
+    }
+}#backToScenarioSelectionFromSimBtn {
+    background-color: #f0f0f0; /* Light grey background */
+    color: #333; /* Dark text */
+    border: 1px solid #ccc; /* Light grey border */
+    padding: 10px 20px; /* Comfortable padding */
+    border-radius: 5px; /* Slightly rounded corners */
+    cursor: pointer; /* Indicate it's clickable */
+    font-size: 16px; /* Readable font size */
+    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+}
+
+#backToScenarioSelectionFromSimBtn:hover {
+    background-color: #e0e0e0; /* Slightly darker grey on hover */
 }

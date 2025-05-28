@@ -3,9 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeScreen = document.getElementById('welcomeScreen');
     const firstNameInput = document.getElementById('firstNameInput');
     const startButton = document.getElementById('startButton');
-    const rtNamePlaceholder = document.getElementById('rtNamePlaceholder'); // For scenario text
 
-    const mainContainer = document.querySelector('.container'); // The main simulator content
+    const scenarioSelectionScreen = document.getElementById('scenarioSelectionScreen');
+    const scenarioWelcomeTitle = document.getElementById('scenarioWelcomeTitle');
+    const scenarioGrid = document.getElementById('scenarioGrid');
+
+    const mainSimulatorScreen = document.getElementById('mainSimulatorScreen'); // Changed from .container
+    const rtNamePlaceholder = document.getElementById('rtNamePlaceholder');
 
     const ipapInput = document.getElementById('ipap');
     const epapInput = document.getElementById('epap');
@@ -37,6 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const impactList = document.getElementById('impactList');
     const nextScenarioBtn = document.getElementById('nextScenarioBtn');
     const repeatScenarioBtn = document.getElementById('repeatScenarioBtn');
+    const backToSelectionBtn = document.getElementById('backToSelectionBtn');
+
+    // New button from main simulator screen
+    const backToScenarioSelectionFromSimBtn = document.getElementById('backToScenarioSelectionFromSimBtn');
 
 
     // --- Global Variables ---
@@ -116,24 +124,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const scenarios = [
         {
             name: "COPD Exacerbation with Acute Respiratory Acidosis",
+            shortDescription: "Manage a patient with severe COPD exacerbation and high CO2.",
             initial: { pH: 7.28, paco2: 65, pao2: 55, hco3: 28 },
             initialBIPAP: { ipap: 12, epap: 5, fio2: 40 },
             text: "A 68-year-old male with severe COPD is admitted with acute exacerbation. He's dyspneic, using accessory muscles, and is on BIPAP with the shown settings. His current ABG reflects significant respiratory acidosis and hypoxemia. As RT {name}, your task is to adjust BIPAP settings to improve his ventilation and oxygenation."
         },
         {
             name: "Acute Hypoxemic Respiratory Failure (Pneumonia)",
+            shortDescription: "Improve oxygenation in a patient with severe pneumonia.",
             initial: { pH: 7.42, paco2: 38, pao2: 45, hco3: 24 },
             initialBIPAP: { ipap: 15, epap: 8, fio2: 60 },
             text: "A 55-year-old female with severe pneumonia is experiencing acute hypoxemic respiratory failure. Despite high FiO2 and EPAP on BIPAP with the shown settings, she remains significantly hypoxemic. Her ventilation is adequate. As RT {name}, adjust settings to improve oxygenation without causing hyperventilation."
         },
         {
             name: "Hypercapnic Respiratory Failure (CHF Exacerbation)",
+            shortDescription: "Correct severe hypercapnia in a heart failure patient.",
             initial: { pH: 7.15, paco2: 80, pao2: 65, hco3: 30 },
             initialBIPAP: { ipap: 18, epap: 6, fio2: 30 },
             text: "A 72-year-old male with acute decompensated heart failure is in severe hypercapnic respiratory failure, currently on BIPAP with the shown settings. He is breathing rapidly but unable to clear CO2 effectively. As RT {name}, improve his ventilation to correct the acidosis and support his breathing."
         },
         {
             name: "Post-Extubation Respiratory Distress",
+            shortDescription: "Support breathing and prevent re-intubation after extubation.",
             initial: { pH: 7.32, paco2: 52, pao2: 70, hco3: 26 },
             initialBIPAP: { ipap: 14, epap: 6, fio2: 50 },
             text: "A 45-year-old patient, recently extubated, is showing signs of respiratory distress with mild hypercapnia and hypoxemia, currently on BIPAP with the shown settings. As RT {name}, optimize settings to support his breathing and prevent re-intubation."
@@ -176,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadNextScenario() {
         let nextIndex = currentScenarioIndex + 1;
         if (nextIndex >= scenarios.length) {
-            nextIndex = 0; // Loop back to the first scenario
+            nextIndex = 0; // Loop back to the first scenario for continuous practice
             alert("You've completed all scenarios! Starting again from the beginning.");
         }
         loadScenario(nextIndex);
@@ -226,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const psDecrease = initialPs - finalPs;
             const vtDecrease = (psDecrease * 50).toFixed(0);
             const co2Change = (currentABG.PaCO2 - initialABG.paco2).toFixed(1);
-             impactList.innerHTML += `<li>You **decreased IPAP** by ${ipapDecrease} cmH2O (from ${initialSettings.ipap} to ${finalSettings.ipap}). This reduced pressure support by ${psDecrease} cmH2O, which might decrease ventilation and Tidal Volume (Vt) by about ${vtDecrease} mL/breath. Be mindful as this could increase PaCO2, but in this case, it was beneficial.</li>`;
+             impactList.innerHTML += `<li>You **decreased IPAP** by ${ipapDecrease} cmH2O (from ${initialSettings.ipap} to ${finalSettings.ipap}). This reduced pressure support by ${psDecrease} cmH2O, which might decrease ventilation and Tidal Volume (Vt) by about ${vtDecrease} mL/breath. Be mindful as this could increase PaCO2, but in this case, it was beneficial (if PaCO2 was too low).</li>`;
         } else {
             impactList.innerHTML += `<li>Your **IPAP** setting remained consistent.</li>`;
         }
@@ -258,6 +270,40 @@ document.addEventListener('DOMContentLoaded', () => {
         feedbackPopup.style.display = 'flex'; // Show the popup
     }
 
+    // --- Scenario Selection Page Logic ---
+    function generateScenarioCards() {
+        scenarioGrid.innerHTML = ''; // Clear existing cards
+        scenarios.forEach((scenario, index) => {
+            const card = document.createElement('div');
+            card.classList.add('scenario-card');
+            card.dataset.index = index; // Store index for later use
+
+            const title = document.createElement('h3');
+            title.textContent = scenario.name;
+            card.appendChild(title);
+
+            const description = document.createElement('p');
+            description.textContent = scenario.shortDescription;
+            card.appendChild(description);
+
+            card.addEventListener('click', () => {
+                loadScenario(index); // Load the selected scenario
+                scenarioSelectionScreen.style.display = 'none'; // Hide selection screen
+                mainSimulatorScreen.style.display = 'flex'; // Show main simulator
+            });
+            scenarioGrid.appendChild(card);
+        });
+    }
+
+    function showScenarioSelection() {
+        mainSimulatorScreen.style.display = 'none';
+        feedbackPopup.style.display = 'none';
+        scenarioSelectionScreen.style.display = 'flex'; // Show the selection screen
+        scenarioWelcomeTitle.textContent = `Welcome, RT ${userName}!`;
+        generateScenarioCards(); // Re-generate cards in case they need refreshing
+    }
+
+
     // --- Event Listeners ---
 
     // Welcome Screen Logic
@@ -267,8 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
             userName = name;
             rtNamePlaceholder.textContent = userName; // Set RT name in scenario panel
             welcomeScreen.style.display = 'none'; // Hide welcome screen
-            mainContainer.style.display = 'flex'; // Show main simulator
-            loadScenario(0); // Load the first scenario
+            showScenarioSelection(); // Transition to scenario selection
         } else {
             alert('Please enter your first name to begin!');
         }
@@ -315,7 +360,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     nextScenarioBtn.addEventListener('click', loadNextScenario);
     repeatScenarioBtn.addEventListener('click', repeatCurrentScenario);
+    backToSelectionBtn.addEventListener('click', showScenarioSelection); // New listener for back to selection
 
-    // Initial state: Hide main content until name is entered
-    mainContainer.style.display = 'none';
+    // Listener for the new button on the main sim screen
+    if (backToScenarioSelectionFromSimBtn) { // Good practice to check if element exists
+        backToScenarioSelectionFromSimBtn.addEventListener('click', showScenarioSelection);
+    }
+
+
+    // Initial state: Hide all main content until name is entered
+    mainSimulatorScreen.style.display = 'none';
+    scenarioSelectionScreen.style.display = 'none';
 });

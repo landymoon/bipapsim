@@ -16,7 +16,14 @@
         </div>
     </div>
 
-    <div class="container">
+    <div id="scenarioSelectionScreen" class="screen-container" style="display:none;">
+        <h1 id="scenarioWelcomeTitle">Welcome, RT Name!</h1>
+        <p class="scenario-intro-text">Select a patient scenario to begin your practice:</p>
+        <div id="scenarioGrid" class="scenario-grid">
+            </div>
+    </div>
+
+    <div id="mainSimulatorScreen" class="container" style="display:none;">
         <div class="simulator-panel">
             <h1>BIPAP Simulator</h1>
             <div class="settings">
@@ -48,7 +55,7 @@
                 <p><strong>Scenario for RT <span id="rtNamePlaceholder"></span>:</strong> <span id="scenarioText"></span></p>
                 <p>Initial ABG: pH <span id="initialPH"></span>, PaCO2 <span id="initialPaCO2"></span>, PaO2 <span id="initialPaO2"></span>, HCO3 <span id="initialHCO3"></span></p>
             </div>
-            </div>
+            <button id="backToScenarioSelectionFromSimBtn" style="margin-top: 20px;">Back to Scenario Selection</button> </div>
     </div>
 
     <div id="feedbackPopup" class="overlay" style="display:none;">
@@ -66,7 +73,7 @@
             <div class="feedback-buttons">
                 <button id="nextScenarioBtn">Next Scenario</button>
                 <button id="repeatScenarioBtn">Repeat Current Scenario</button>
-            </div>
+                <button id="backToSelectionBtn">Back to Scenario Selection</button> </div>
         </div>
     </div>
 
