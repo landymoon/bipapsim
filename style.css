@@ -3,7 +3,7 @@ body {
     font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: flex-start; /* Changed to flex-start for better screen positioning */
     min-height: 100vh;
     background: linear-gradient(135deg, #e0f2f7 0%, #c2e0f0 100%);
     margin: 0;
@@ -22,7 +22,13 @@ body {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.6);
+    /* Added display flex for centering content within screen-container */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* Center content vertically too */
 }
+
 
 /* Main Simulator Specific Container (retains flex layout) */
 .container {
@@ -150,7 +156,7 @@ h1, h2 {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(8px);
-    display: flex;
+    display: flex; /* Keeps flex for centering content */
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -338,12 +344,57 @@ h1, h2 {
     box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
 }
 
-#backToSelectionBtn {
+#backToSelectionBtn { /* This button now leads to Mode Selection */
     background: linear-gradient(45deg, #17a2b8, #138496);
 }
 #backToSelectionBtn:hover {
     background: linear-gradient(45deg, #138496, #17a2b8);
     box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+}
+
+/* --- Mode Selection Screen --- */
+#modeSelectionScreen {
+    /* Uses .screen-container styles, initially hidden by JS */
+    display: none; /* JS will change to flex */
+    flex-direction: column;
+    align-items: center;
+}
+
+.mode-selection-buttons {
+    display: flex;
+    gap: 20px; /* Space between buttons */
+    margin-top: 30px;
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+    justify-content: center;
+}
+
+.mode-button {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 250px; /* Ensure buttons have a good size */
+    text-align: center;
+}
+
+#bipapModeBtn {
+    background: linear-gradient(45deg, #007bff, #0056b3); /* Blue gradient */
+}
+#bipapModeBtn:hover {
+    background: linear-gradient(45deg, #0056b3, #007bff);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+#ventilatorModeBtn {
+    background: linear-gradient(45deg, #28a745, #218838); /* Green gradient */
+}
+#ventilatorModeBtn:hover {
+    background: linear-gradient(45deg, #218838, #28a745);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
 }
 
 
@@ -354,7 +405,7 @@ h1, h2 {
 
 /* --- Scenario Grid Styles --- */
 #scenarioSelectionScreen {
-    display: flex;
+    /* display: flex; inherited from .screen-container */
     flex-direction: column;
     align-items: center;
 }
@@ -427,20 +478,24 @@ h1, h2 {
 }
 
 /* Back to Scenario Selection Button from Sim Screen */
-#backToScenarioSelectionFromSimBtn {
-    background-color: #f0f0f0;
-    color: #333;
-    border: 1px solid #ccc;
+#backToScenarioSelectionFromSimBtn { /* This button now leads to Mode Selection */
+    background-color: #6c757d; /* Changed color to be distinct */
+    color: white;
+    border: 1px solid #5a6268;
     padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1em;
     transition: background-color 0.3s ease;
     margin-top: 20px;
+    display: block; /* Make it block to take full width if needed or center easily */
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 250px; /* Limit max width */
 }
 
 #backToScenarioSelectionFromSimBtn:hover {
-    background-color: #e0e0e0;
+    background-color: #5a6268;
 }
 
 
@@ -471,14 +526,16 @@ h1, h2 {
     }
 
 
-    .overlay-content h2, #scenarioWelcomeTitle {
+    .overlay-content h2, #scenarioWelcomeTitle, #modeSelectionScreen h1 { /* Added #modeSelectionScreen h1 */
         font-size: 1.6em;
     }
 
-    .overlay-content button {
+    .overlay-content button, .mode-button { /* Added .mode-button */
         padding: 10px 15px;
         font-size: 1em;
+        min-width: 200px; /* Adjust min-width for mode buttons on mobile */
     }
+
 
     .feedback-content h3 {
         font-size: 1.2em;
@@ -487,7 +544,7 @@ h1, h2 {
     .feedback-content p, .feedback-content ul li {
         font-size: 0.9em;
     }
-    
+
     .abg-comparison-container {
         flex-direction: column;
         gap: 10px;
@@ -506,6 +563,13 @@ h1, h2 {
         width: 100%;
         min-width: unset;
     }
+
+    .mode-selection-buttons { /* Ensure mode buttons stack on mobile */
+        flex-direction: column;
+        align-items: center; /* Center stacked buttons */
+        gap: 15px;
+    }
+
 
     .scenario-grid {
         grid-template-columns: 1fr;

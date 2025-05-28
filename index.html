@@ -16,6 +16,15 @@
         </div>
     </div>
 
+    <div id="modeSelectionScreen" class="screen-container" style="display:none;">
+        <h1>Select Simulation Mode</h1>
+        <p class="scenario-intro-text">Choose which simulator you would like to use, RT <span id="userNameModeScreen"></span>.</p>
+        <div class="mode-selection-buttons">
+            <button id="bipapModeBtn" class="mode-button">BIPAP Simulation</button>
+            <button id="ventilatorModeBtn" class="mode-button">Ventilator Simulation</button>
+        </div>
+    </div>
+
     <div id="scenarioSelectionScreen" class="screen-container" style="display:none;">
         <h1 id="scenarioWelcomeTitle">Welcome, RT Name!</h1>
         <p class="scenario-intro-text">Select a patient scenario to begin your practice:</p>
@@ -54,7 +63,8 @@
                 <p><strong>Scenario for RT <span id="rtNamePlaceholder"></span>:</strong> <span id="scenarioText"></span></p>
                 <p>Initial ABG: pH <span id="initialPH"></span>, PaCO2 <span id="initialPaCO2"></span>, PaO2 <span id="initialPaO2"></span></p>
             </div>
-            <button id="backToScenarioSelectionFromSimBtn" style="margin-top: 20px;">Back to Scenario Selection</button> </div>
+            <button id="backToScenarioSelectionFromSimBtn" style="margin-top: 20px;">Back to Scenario Selection</button>
+        </div>
     </div>
 
     <div id="feedbackPopup" class="overlay" style="display:none;">

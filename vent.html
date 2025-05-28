@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventilator Simulator - Sweep Debug with PRVC</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif; display: flex; flex-direction: column;
+            align-items: center; padding: 10px; background-color: #eef2f7; color: #333;
+        }
+        .main-container { display: flex; width: 100%; max-width: 1500px; gap: 15px; }
+        .controls-column {
+            width: 360px; padding: 15px; background-color: #fff; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); align-self: flex-start;
+            height: calc(100vh - 40px); overflow-y: auto;
+        }
+        .waveforms-column { flex-grow: 1; display: flex; flex-direction: column; gap: 10px; }
+        .monitored-params-column {
+            width: 280px; padding: 15px; background-color: #fff; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); align-self: flex-start;
+            height: calc(100vh - 40px); overflow-y: auto;
+        }
+        .waveform-container {
+            background-color: #fff; padding: 10px; border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); height: 200px;
+        }
+        h1, h2, h3 { color: #2c3e50; text-align: center; margin-top: 0; margin-bottom: 15px; }
+        h3 { margin-bottom:10px; font-size: 1.1em; border-bottom: 1px solid #eee; padding-bottom: 5px;}
+        .control-group, .event-group, .maneuvers-group, .simulation-controls { margin-bottom: 12px; }
+        .control-group fieldset {
+            border: 1px solid #cce; padding: 10px; padding-top: 5px;
+            border-radius: 6px; margin-top: 5px;
+        }
+        .control-group fieldset legend {
+            font-weight: bold; font-size: 0.95em; padding: 0 8px; color: #3498db;
+        }
+        label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.85em; }
+        input[type="number"], select {
+            width: calc(100% - 20px); padding: 7px 9px; border: 1px solid #ccc;
+            border-radius: 4px; box-sizing: border-box; font-size: 0.9em;
+        }
+        button, .maneuver-btn, .sim-control-btn, #backToHomeBtnVent { /* Added #backToHomeBtnVent */
+            width: 100%; padding: 10px 12px; background-color: #3498db; color: white;
+            border: none; border-radius: 4px; cursor: pointer; font-size: 0.95em;
+            transition: background-color 0.2s; margin-top: 8px;
+        }
+        button:hover, .maneuver-btn:hover, .sim-control-btn:hover, #backToHomeBtnVent:hover { background-color: #2980b9; } /* Added #backToHomeBtnVent:hover */
+        .maneuver-btn { background-color: #e67e22; margin-bottom: 5px;}
+        .maneuver-btn:hover { background-color: #d35400; }
+        .maneuver-btn.active { background-color: #c0392b !important; color: white !important; }
+        .sim-control-btn { background-color: #27ae60; }
+        .sim-control-btn:hover { background-color: #229954; }
+
+        #backToHomeBtnVent { /* Style for the new back button */
+            background-color: #7f8c8d; /* A neutral color */
+            margin-bottom: 15px; /* Add some space below it */
+        }
+        #backToHomeBtnVent:hover {
+            background-color: #95a5a6;
+        }
+
+        .param-display-group {
+            margin-top: 15px; font-size: 0.85em; color: #555;
+            background-color: #f9f9f9; padding: 8px; border-radius: 4px;
+        }
+        .param-display-group p { margin: 4px 0; }
+        .param-display-group .warn { color: #c0392b; font-weight: bold;}
+        .monitored-param {
+            display: flex; justify-content: space-between; padding: 6px 3px;
+            border-bottom: 1px solid #f0f0f0; font-size: 0.9em;
+        }
+        .monitored-param:last-child { border-bottom: none; }
+        .param-label { color: #555; }
+        .param-value { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="controls-column">
+            <button id="backToHomeBtnVent">Back to Home</button>
+            <h2>Settings</h2>
+            <div class="control-group">
+                <label for="mode">Mode:</label>
+                <select id="mode">
+                    <option value="VC">Volume Control (VC)</option>
+                    <option value="PC">Pressure Control (PC)</option>
+                    <option value="PRVC">Pressure Reg. Volume Control (PRVC)</option>
+                    <option value="APRV">APRV / BiVent</option>
+                    <option value="CPAP">CPAP (Basic)</option>
+                </select>
+            </div>
+
+            <div id="vc-settings-container">
+                 <fieldset><legend>Volume Control</legend>
+                    <div class="control-group"><label for="tidalVolumeVC">Tidal Volume (Vt) (mL):</label><input type="number" id="tidalVolumeVC" value="500" min="50" max="1000" step="10"></div>
+                    <div class="control-group"><label for="respiratoryRateVC">Respiratory Rate (RR) (bpm):</label><input type="number" id="respiratoryRateVC" value="12" min="1" max="60"></div>
+                    <div class="control-group"><label for="inspiratoryTimeVC">Inspiratory Time (Ti) (s):</label><input type="number" id="inspiratoryTimeVC" value="1.0" min="0.2" max="5" step="0.1"></div>
+                </fieldset>
+            </div>
+            <div id="pc-settings-container" style="display:none;">
+                <fieldset><legend>Pressure Control</legend>
+                    <div class="control-group"><label for="inspiratoryPressurePC">Insp. Pressure (Pinsp) (cmH₂O above PEEP):</label><input type="number" id="inspiratoryPressurePC" value="15" min="1" max="50"></div>
+                    <div class="control-group"><label for="respiratoryRatePC">Resp. Rate (RR) (bpm):</label><input type="number" id="respiratoryRatePC" value="12" min="1" max="60"></div>
+                    <div class="control-group"><label for="inspiratoryTimePC">Insp. Time (Ti) (s):</label><input type="number" id="inspiratoryTimePC" value="1.0" min="0.1" max="5" step="0.1"></div>
+                </fieldset>
+            </div>
+            <div id="prvc-settings-container" style="display:none;">
+                <fieldset><legend>PRVC Settings</legend>
+                    <div class="control-group">
+                        <label for="tidalVolumePRVC">Target Tidal Volume (Vt) (mL):</label>
+                        <input type="number" id="tidalVolumePRVC" value="450" min="50" max="1000" step="10">
+                    </div>
+                    <div class="control-group">
+                        <label for="respiratoryRatePRVC">Respiratory Rate (RR) (bpm):</label>
+                        <input type="number" id="respiratoryRatePRVC" value="12" min="1" max="60">
+                    </div>
+                    <div class="control-group">
+                        <label for="inspiratoryTimePRVC">Inspiratory Time (Ti) (s):</label>
+                        <input type="number" id="inspiratoryTimePRVC" value="1.0" min="0.2" max="5" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label for="maxPressurePRVC">Max Insp. Pressure (Pmax) (cmH₂O above PEEP):</label>
+                        <input type="number" id="maxPressurePRVC" value="35" min="5" max="50">
+                    </div>
+                </fieldset>
+            </div>
+            <div id="aprv-settings-container" style="display:none;">
+                <fieldset><legend>APRV / BiVent Settings</legend>
+                    <div class="control-group"><label for="pHightAprv">P-high (cmH₂O):</label><input type="number" id="pHightAprv" value="25" min="5" max="50"></div>
+                    <div class="control-group"><label for="tHighAprv">T-high (s):</label><input type="number" id="tHighAprv" value="4.0" min="0.5" max="30" step="0.1"></div>
+                    <div class="control-group"><label for="pLowAprv">P-low (cmH₂O):</label><input type="number" id="pLowAprv" value="5" min="0" max="30"></div>
+                    <div class="control-group"><label for="tLowAprv">T-low (s):</label><input type="number" id="tLowAprv" value="0.8" min="0.2" max="5" step="0.1"></div>
+                </fieldset>
+            </div>
+            <div id="cpap-settings-container" style="display:none;">
+                 <fieldset><legend>CPAP</legend>
+                    <div class="control-group"><label for="cpapLevel">CPAP Level (cmH₂O):</label><input type="number" id="cpapLevel" value="8" min="0" max="30"></div>
+                </fieldset>
+            </div>
+            <div class="control-group">
+                 <fieldset><legend>Common (Not for APRV P-low)</legend>
+                    <label for="peep">PEEP (cmH₂O):</label>
+                    <input type="number" id="peep" value="5" min="0" max="30">
+                </fieldset>
+            </div>
+            <div class="event-group">
+                <h3>Simulate Event</h3>
+                <select id="simulatedEvent">
+                    <option value="NONE">None</option>
+                    <option value="INCREASED_R">Increased Resistance</option>
+                    <option value="DECREASED_C">Decreased Compliance</option>
+                </select>
+            </div>
+            <div class="maneuvers-group">
+                <h3>Maneuvers</h3>
+                <button class="maneuver-btn" id="inspHoldBtn">Inspiratory Hold</button>
+                <button class="maneuver-btn" id="expHoldBtn">Expiratory Hold</button>
+            </div>
+            <div class="simulation-controls">
+                 <h3>Simulation Control</h3>
+                <button onclick="setupAndStartSimulation()">Apply & Run Simulation</button>
+                <button class="sim-control-btn" id="pausePlayBtn">Pause Waveforms</button>
+            </div>
+            <div class="param-display-group">
+                <p>Status: <span id="statusDisplay">Idle</span></p>
+                <p>VC Set RR: <span id="vcSetRRDisplay">N/A</span> bpm</p>
+                <p>VC Calc. I:E Ratio: <span id="calculatedIERatioVC">N/A</span></p>
+                <p>PRVC Set RR: <span id="prvcSetRRDisplay">N/A</span> bpm</p>
+                <p>PRVC Calc. I:E Ratio: <span id="calculatedIERatioPRVC">N/A</span></p>
+                <p>PRVC Current InspP: <span id="prvcCurrentInspPDisplay">N/A</span> cmH₂O</p>
+                <p>APRV Release Rate: <span id="aprvReleaseRateDisplay">N/A</span> /min</p>
+                <p>Insp. Time (Set/Calc): <span id="tiDisplay">N/A</span> s</p>
+                <p>Exp. Time (Calc): <span id="teDisplay">N/A</span> s</p>
+                <p>Cycle Time (Calc): <span id="tctDisplay">N/A</span> s</p>
+                <p id="vcTeWarning" class="warn" style="display:none;">Warning: Te is very short/negative!</p>
+                <p id="pcTeWarning" class="warn" style="display:none;">Warning: Te is very short/negative!</p>
+                <p id="prvcTeWarning" class="warn" style="display:none;">Warning: Te is very short/negative!</p>
+            </div>
+        </div>
+
+        <div class="waveforms-column">
+            <div class="waveform-container"> <canvas id="pressureWaveform"></canvas> </div>
+            <div class="waveform-container"> <canvas id="flowWaveform"></canvas> </div>
+            <div class="waveform-container"> <canvas id="volumeWaveform"></canvas> </div>
+        </div>
+
+        <div class="monitored-params-column">
+            <h3>Monitored Parameters</h3>
+            <div class="monitored-param"><span class="param-label">Peak Pressure (PIP):</span> <span class="param-value" id="pipDisplay">0</span> cmH₂O</div>
+            <div class="monitored-param"><span class="param-label">Plateau (Pplat):</span> <span class="param-value" id="pplatDisplay">0</span> cmH₂O</div>
+            <div class="monitored-param"><span class="param-label">Mean Pressure (MAP):</span> <span class="param-value" id="mapDisplay">0.0</span> cmH₂O</div>
+            <div class="monitored-param"><span class="param-label">PEEP / P-low:</span> <span class="param-value" id="setPeepDisplay">0</span> cmH₂O</div>
+            <div class="monitored-param"><span class="param-label">Total PEEP (Meas.):</span> <span class="param-value" id="totalPeepDisplay">0</span> cmH₂O</div>
+            <div class="monitored-param"><span class="param-label">Inhaled Vt:</span> <span class="param-value" id="inhVtDisplay">0</span> mL</div>
+            <div class="monitored-param"><span class="param-label">Exhaled Vt (Release):</span> <span class="param-value" id="exhVtDisplay">0</span> mL</div>
+            <div class="monitored-param"><span class="param-label">Minute Vent. (MV):</span> <span class="param-value" id="mvDisplay">0.0</span> L/min</div>
+            <div class="monitored-param"><span class="param-label">Resp. Rate (Actual):</span> <span class="param-value" id="rrDisplay">0</span> bpm</div>
+            <div class="monitored-param"><span class="param-label">Static Compl.:</span> <span class="param-value" id="cstatDisplay">0</span> mL/cmH₂O</div>
+            <div class="monitored-param"><span class="param-label">Dynamic Compl.:</span> <span class="param-value" id="cdynDisplay">0</span> mL/cmH₂O</div>
+            <div class="monitored-param"><span class="param-label">Flow Rate (VC Insp):</span> <span class="param-value" id="flowRateDisplayVC">0</span> L/min</div>
+        </div>
+    </div>
+
+    <script>
+        let pressureChart, flowChart, volumeChart;
+        let animationFrameId;
+
+        const BASE_COMPLIANCE = 50;
+        const BASE_RESISTANCE = 5;
+        const MIN_EXP_TIME_WARNING = 0.2;
+        const SPONT_VT_APRV = 150;
+        const SPONT_RR_APRV = 15;
+
+        let simulationState = {
+            isRunning: false, mode: 'VC',
+            tidalVolumeVC: 500, respiratoryRateVC: 12, inspiratoryTimeVC: 1.0,
+            inspiratoryPressurePC: 15, respiratoryRatePC: 12, inspiratoryTimePC: 1.0,
+            // PRVC State Variables
+            tidalVolumePRVC: 450,
+            respiratoryRatePRVC: 12,
+            inspiratoryTimePRVC: 1.0,
+            maxPressurePRVC: 35, // Max allowed inspiratory pressure *above PEEP*
+            currentInspiratoryPressurePRVC: 10, // Initial/current adaptive pressure target *above PEEP*
+
+            pHightAprv: 25, tHighAprv: 4.0, pLowAprv: 5, tLowAprv: 0.8,
+            currentAprvPhase: 'high', timeInAprvPhase: 0,
+            cpapLevel: 8, peep: 5, simulatedEvent: "NONE",
+            actualInspiratoryTime: 0, actualExpiratoryTime: 0, actualTotalCycleTime: 0,
+            vcInspiratoryFlowLPS: 0,
+            simulationTime: 0, timeInCurrentCycle: 0, currentVolume: 0,
+            breathPhase: 'expiration', maxVolumeThisCycle: 0, minVolumeThisCycle: 0,
+            isBreathStart: true,
+            compliance: BASE_COMPLIANCE, resistance: BASE_RESISTANCE,
+            inspHoldActive: false, inspHoldStartTime: 0, inspHoldDuration: 0.75,
+            expHoldActive: false, expHoldStartTime: 0, expHoldDuration: 0.75,
+            pip: 0, pplat: 0, map: 0, totalPeep: 0,
+            inhaledVt: 0, exhaledVt: 0, minuteVentilation: 0,
+            currentRespiratoryRate: 0, staticCompliance: 0, dynamicCompliance: 0,
+            sumPressureForMAP: 0, mapSampleCount: 0,
+            pplatMeasuredInSequence: null, vtAtPplatInSequence: null,
+            pipForDynamicCompliance:0, vtForDynamicCompliance:0,
+            volumeAtStartOfRelease: 0,
+            sweepDisplayIndex: 0,
+        };
+
+        const SAMPLES_PER_SECOND = 30;
+        const CHART_WINDOW_SECONDS = 10;
+        const DT_SIM = 1 / SAMPLES_PER_SECOND;
+        const MAX_DATA_POINTS_DISPLAY = Math.ceil(CHART_WINDOW_SECONDS * SAMPLES_PER_SECOND);
+
+
+        function initializeCharts() {
+            const commonOptions = (yLabel, suggestedMin = undefined, suggestedMax = undefined) => ({
+                responsive: true, maintainAspectRatio: false, animation: false,
+                scales: {
+                    x: {
+                        type: 'linear',
+                        title: { display: true, text: 'Time (s)' },
+                        min: 0,
+                        max: CHART_WINDOW_SECONDS,
+                        reverse: false,
+                        ticks: { stepSize: 1 }
+                    },
+                    y: { beginAtZero: (yLabel.includes("Flow")) ? false : true, title: { display: true, text: yLabel }, suggestedMin: suggestedMin, suggestedMax: suggestedMax }
+                },
+                elements: { point: { radius: 0 }, line: { borderWidth: 2, tension: 0.1, spanGaps: false } },
+                plugins: { legend: { display: false } }
+            });
+
+            const initialData = () => new Array(MAX_DATA_POINTS_DISPLAY).fill(null).map((_, i) => ({
+                x: parseFloat((i * DT_SIM).toFixed(3)),
+                y: null
+            }));
+
+            pressureChart = new Chart(document.getElementById('pressureWaveform'), { type: 'line', data: { datasets: [{ label: 'Pressure', data: initialData(), borderColor: 'rgb(255, 99, 132)' }] }, options: commonOptions('Pressure (cmH₂O)', 0, 60) });
+            flowChart = new Chart(document.getElementById('flowWaveform'), { type: 'line', data: { datasets: [{ label: 'Flow', data: initialData(), borderColor: 'rgb(54, 162, 235)' }] }, options: commonOptions('Flow (L/min)', -100, 100) });
+            volumeChart = new Chart(document.getElementById('volumeWaveform'), { type: 'line', data: { datasets: [{ label: 'Volume', data: initialData(), borderColor: 'rgb(75, 192, 192)' }] }, options: commonOptions('Volume (mL)', 0, 1000) });
+        }
+
+        function updateModeDisplay() {
+            const mode = document.getElementById('mode').value;
+            document.getElementById('vc-settings-container').style.display = (mode === 'VC') ? 'block' : 'none';
+            document.getElementById('pc-settings-container').style.display = (mode === 'PC') ? 'block' : 'none';
+            document.getElementById('prvc-settings-container').style.display = (mode === 'PRVC') ? 'block' : 'none';
+            document.getElementById('aprv-settings-container').style.display = (mode === 'APRV') ? 'block' : 'none';
+            document.getElementById('cpap-settings-container').style.display = (mode === 'CPAP') ? 'block' : 'none';
+
+            document.getElementById('vcSetRRDisplay').parentElement.style.display = (mode === 'VC') ? 'block' : 'none';
+            document.getElementById('calculatedIERatioVC').parentElement.style.display = (mode === 'VC') ? 'block' : 'none';
+            document.getElementById('prvcSetRRDisplay').parentElement.style.display = (mode === 'PRVC') ? 'block' : 'none';
+            document.getElementById('calculatedIERatioPRVC').parentElement.style.display = (mode === 'PRVC') ? 'block' : 'none';
+            document.getElementById('prvcCurrentInspPDisplay').parentElement.style.display = (mode === 'PRVC') ? 'block' : 'none';
+            document.getElementById('aprvReleaseRateDisplay').parentElement.style.display = (mode === 'APRV') ? 'block' : 'none';
+
+            document.querySelector('.control-group fieldset legend:not([style*="display: none"])').parentElement.style.display = (mode === 'APRV') ? 'none' : 'block'; // Simplified common settings visibility
+            const peepLabelElement = document.getElementById('setPeepDisplay');
+            if (peepLabelElement && peepLabelElement.parentElement && peepLabelElement.parentElement.childNodes[0]) {
+                 peepLabelElement.parentElement.childNodes[0].textContent = (mode === 'APRV') ? 'P-low (Set):' : 'PEEP (Set):';
+            }
+        }
+        document.getElementById('mode').addEventListener('change', updateModeDisplay);
+
+        document.getElementById('inspHoldBtn').addEventListener('click', () => {
+            if (simulationState.isRunning && (simulationState.breathPhase === 'inspiration' || simulationState.breathPhase === 'inspiration_PC' || simulationState.breathPhase === 'inspiration_PRVC' || (simulationState.mode === 'APRV' && simulationState.currentAprvPhase === 'high')) && !simulationState.inspHoldActive && !simulationState.expHoldActive) {
+                simulationState.inspHoldActive = true; simulationState.pipForDynamicCompliance = simulationState.pip;
+                simulationState.vtForDynamicCompliance = simulationState.inhaledVt;
+                simulationState.inspHoldStartTime = (simulationState.mode === 'APRV') ? simulationState.timeInAprvPhase : simulationState.timeInCurrentCycle;
+                document.getElementById('inspHoldBtn').classList.add('active');
+            }
+        });
+        document.getElementById('expHoldBtn').addEventListener('click', () => {
+             if (simulationState.isRunning && (simulationState.breathPhase === 'expiration' || simulationState.breathPhase === 'expiration_PC' ||  simulationState.breathPhase === 'expiration_PRVC' || (simulationState.mode === 'APRV' && simulationState.currentAprvPhase === 'low')) && !simulationState.expHoldActive && !simulationState.inspHoldActive ) {
+                simulationState.expHoldActive = true;
+                simulationState.expHoldStartTime = (simulationState.mode === 'APRV') ? simulationState.timeInAprvPhase : simulationState.timeInCurrentCycle;
+                document.getElementById('expHoldBtn').classList.add('active');
+            }
+        });
+
+        const pausePlayBtn = document.getElementById('pausePlayBtn');
+        pausePlayBtn.addEventListener('click', () => {
+            if (simulationState.isRunning) {
+                simulationState.isRunning = false; cancelAnimationFrame(animationFrameId);
+                pausePlayBtn.textContent = 'Play Waveforms';
+                document.getElementById('statusDisplay').textContent = "Paused"; document.getElementById('statusDisplay').style.color = "orange";
+            } else if (animationFrameId) { // Only if simulation was set up
+                simulationState.isRunning = true; animationFrameId = requestAnimationFrame(simulationLoop);
+                pausePlayBtn.textContent = 'Pause Waveforms';
+                document.getElementById('statusDisplay').textContent = "Running"; document.getElementById('statusDisplay').style.color = "green";
+            } else { // If trying to play from idle without applying settings first
+                 setupAndStartSimulation(); // Apply and run
+            }
+        });
+
+        function readAndUpdateSettings() {
+            const oldMode = simulationState.mode;
+            simulationState.mode = document.getElementById('mode').value;
+            simulationState.peep = parseFloat(document.getElementById('peep').value);
+            simulationState.simulatedEvent = document.getElementById('simulatedEvent').value;
+            simulationState.compliance = BASE_COMPLIANCE;
+            simulationState.resistance = BASE_RESISTANCE;
+            if (simulationState.simulatedEvent === "INCREASED_R") simulationState.resistance *= 2.5;
+            if (simulationState.simulatedEvent === "DECREASED_C") simulationState.compliance /= 2;
+
+            document.getElementById('flowRateDisplayVC').textContent = "N/A";
+            document.getElementById('vcSetRRDisplay').textContent = "N/A";
+            document.getElementById('calculatedIERatioVC').textContent = "N/A";
+            document.getElementById('prvcSetRRDisplay').textContent = "N/A";
+            document.getElementById('calculatedIERatioPRVC').textContent = "N/A";
+            document.getElementById('prvcCurrentInspPDisplay').textContent = "N/A";
+            document.getElementById('aprvReleaseRateDisplay').textContent = "N/A";
+            document.getElementById('vcTeWarning').style.display = 'none';
+            document.getElementById('pcTeWarning').style.display = 'none';
+            document.getElementById('prvcTeWarning').style.display = 'none';
+
+
+            if (simulationState.mode === 'VC') {
+                simulationState.tidalVolumeVC = parseFloat(document.getElementById('tidalVolumeVC').value);
+                simulationState.respiratoryRateVC = parseFloat(document.getElementById('respiratoryRateVC').value);
+                simulationState.inspiratoryTimeVC = parseFloat(document.getElementById('inspiratoryTimeVC').value);
+                simulationState.actualInspiratoryTime = simulationState.inspiratoryTimeVC;
+                if (simulationState.respiratoryRateVC > 0) {
+                    simulationState.actualTotalCycleTime = 60 / simulationState.respiratoryRateVC;
+                    simulationState.actualExpiratoryTime = simulationState.actualTotalCycleTime - simulationState.actualInspiratoryTime;
+                    simulationState.currentRespiratoryRate = simulationState.respiratoryRateVC;
+                    document.getElementById('vcSetRRDisplay').textContent = simulationState.respiratoryRateVC.toFixed(0);
+                    if (simulationState.actualExpiratoryTime < MIN_EXP_TIME_WARNING) { document.getElementById('vcTeWarning').style.display = 'block'; if(simulationState.actualExpiratoryTime < 0) simulationState.actualExpiratoryTime = 0;}
+                    if (simulationState.actualExpiratoryTime > 0 && simulationState.actualInspiratoryTime > 0) { document.getElementById('calculatedIERatioVC').textContent = `1:${(simulationState.actualExpiratoryTime / simulationState.actualInspiratoryTime).toFixed(1)}`;}
+                    else { document.getElementById('calculatedIERatioVC').textContent = "Invalid"; }
+                } else { simulationState.actualTotalCycleTime = Infinity; simulationState.actualExpiratoryTime = Infinity; simulationState.currentRespiratoryRate = 0; document.getElementById('vcSetRRDisplay').textContent = "0"; document.getElementById('calculatedIERatioVC').textContent = "N/A";}
+                if (simulationState.actualInspiratoryTime > 0) { simulationState.vcInspiratoryFlowLPS = (simulationState.tidalVolumeVC / 1000) / simulationState.actualInspiratoryTime; document.getElementById('flowRateDisplayVC').textContent = (simulationState.vcInspiratoryFlowLPS * 60).toFixed(1);}
+                else { simulationState.vcInspiratoryFlowLPS = 0; document.getElementById('flowRateDisplayVC').textContent = "N/A"; }
+            } else if (simulationState.mode === 'PC') {
+                simulationState.inspiratoryPressurePC = parseFloat(document.getElementById('inspiratoryPressurePC').value);
+                simulationState.respiratoryRatePC = parseFloat(document.getElementById('respiratoryRatePC').value);
+                simulationState.inspiratoryTimePC = parseFloat(document.getElementById('inspiratoryTimePC').value);
+                simulationState.actualInspiratoryTime = simulationState.inspiratoryTimePC;
+                 if (simulationState.respiratoryRatePC > 0) {
+                    simulationState.actualTotalCycleTime = 60 / simulationState.respiratoryRatePC;
+                    simulationState.actualExpiratoryTime = simulationState.actualTotalCycleTime - simulationState.actualInspiratoryTime;
+                    if (simulationState.actualExpiratoryTime < MIN_EXP_TIME_WARNING) { document.getElementById('pcTeWarning').style.display = 'block'; if (simulationState.actualExpiratoryTime < 0) simulationState.actualExpiratoryTime = 0; }
+                    simulationState.currentRespiratoryRate = simulationState.respiratoryRatePC;
+                } else { simulationState.actualTotalCycleTime = Infinity; simulationState.actualExpiratoryTime = Infinity; simulationState.currentRespiratoryRate = 0; }
+            } else if (simulationState.mode === 'PRVC') {
+                simulationState.tidalVolumePRVC = parseFloat(document.getElementById('tidalVolumePRVC').value);
+                simulationState.respiratoryRatePRVC = parseFloat(document.getElementById('respiratoryRatePRVC').value);
+                simulationState.inspiratoryTimePRVC = parseFloat(document.getElementById('inspiratoryTimePRVC').value);
+                simulationState.maxPressurePRVC = parseFloat(document.getElementById('maxPressurePRVC').value);
+
+                if (oldMode !== 'PRVC') {
+                    simulationState.currentInspiratoryPressurePRVC = Math.min(10, simulationState.maxPressurePRVC); // Start with 10 or Pmax if Pmax is lower
+                }
+                simulationState.currentInspiratoryPressurePRVC = Math.min(simulationState.currentInspiratoryPressurePRVC, simulationState.maxPressurePRVC);
+                simulationState.currentInspiratoryPressurePRVC = Math.max(1, simulationState.currentInspiratoryPressurePRVC);
+
+
+                simulationState.actualInspiratoryTime = simulationState.inspiratoryTimePRVC;
+                if (simulationState.respiratoryRatePRVC > 0) {
+                    simulationState.actualTotalCycleTime = 60 / simulationState.respiratoryRatePRVC;
+                    simulationState.actualExpiratoryTime = simulationState.actualTotalCycleTime - simulationState.actualInspiratoryTime;
+                    if (simulationState.actualExpiratoryTime < MIN_EXP_TIME_WARNING) {
+                         document.getElementById('prvcTeWarning').style.display = 'block';
+                         if (simulationState.actualExpiratoryTime < 0) simulationState.actualExpiratoryTime = 0;
+                    }
+                    simulationState.currentRespiratoryRate = simulationState.respiratoryRatePRVC;
+                    document.getElementById('prvcSetRRDisplay').textContent = simulationState.respiratoryRatePRVC.toFixed(0);
+                    if (simulationState.actualExpiratoryTime > 0 && simulationState.actualInspiratoryTime > 0) {
+                        document.getElementById('calculatedIERatioPRVC').textContent = `1:${(simulationState.actualExpiratoryTime / simulationState.actualInspiratoryTime).toFixed(1)}`;
+                    } else {
+                        document.getElementById('calculatedIERatioPRVC').textContent = "Invalid";
+                    }
+                } else {
+                    simulationState.actualTotalCycleTime = Infinity;
+                    simulationState.actualExpiratoryTime = Infinity;
+                    simulationState.currentRespiratoryRate = 0;
+                    document.getElementById('prvcSetRRDisplay').textContent = "0";
+                    document.getElementById('calculatedIERatioPRVC').textContent = "N/A";
+                }
+                document.getElementById('prvcCurrentInspPDisplay').textContent = simulationState.currentInspiratoryPressurePRVC.toFixed(1);
+
+            } else if (simulationState.mode === 'APRV') {
+                simulationState.pHightAprv = parseFloat(document.getElementById('pHightAprv').value);
+                simulationState.tHighAprv = parseFloat(document.getElementById('tHighAprv').value);
+                simulationState.pLowAprv = parseFloat(document.getElementById('pLowAprv').value);
+                simulationState.tLowAprv = parseFloat(document.getElementById('tLowAprv').value);
+                simulationState.actualTotalCycleTime = simulationState.tHighAprv + simulationState.tLowAprv;
+                simulationState.currentRespiratoryRate = (simulationState.actualTotalCycleTime > 0) ? (60 / simulationState.actualTotalCycleTime) : 0;
+                document.getElementById('aprvReleaseRateDisplay').textContent = simulationState.currentRespiratoryRate.toFixed(1);
+                simulationState.actualInspiratoryTime = simulationState.tHighAprv;
+                simulationState.actualExpiratoryTime = simulationState.tLowAprv;
+                simulationState.peep = simulationState.pLowAprv;
+            } else if (simulationState.mode === 'CPAP') {
+                simulationState.cpapLevel = parseFloat(document.getElementById('cpapLevel').value);
+                simulationState.actualInspiratoryTime = 0; simulationState.actualExpiratoryTime = 0; simulationState.actualTotalCycleTime = 0;
+                simulationState.currentRespiratoryRate = 0;
+                simulationState.peep = simulationState.cpapLevel;
+            }
+            document.getElementById('tiDisplay').textContent = (simulationState.mode === 'APRV' ? simulationState.tHighAprv : simulationState.actualInspiratoryTime).toFixed(2);
+            document.getElementById('teDisplay').textContent = (simulationState.mode === 'APRV' ? simulationState.tLowAprv : (simulationState.actualExpiratoryTime > 0 && simulationState.actualExpiratoryTime !== Infinity ? simulationState.actualExpiratoryTime.toFixed(2) : "N/A"));
+            document.getElementById('tctDisplay').textContent = (simulationState.actualTotalCycleTime > 0 && simulationState.actualTotalCycleTime !== Infinity) ? simulationState.actualTotalCycleTime.toFixed(2) : "N/A";
+            document.getElementById('setPeepDisplay').textContent = (simulationState.mode === 'APRV' ? simulationState.pLowAprv : simulationState.peep).toFixed(0);
+        }
+
+        function resetSimulationStateAndMonitoredValues() {
+            simulationState.simulationTime = 0; simulationState.timeInCurrentCycle = 0;
+            simulationState.timeInAprvPhase = 0; simulationState.currentAprvPhase = 'high';
+            let basePressure = (simulationState.mode === 'APRV') ? simulationState.pLowAprv : simulationState.peep;
+            simulationState.currentVolume = simulationState.compliance * basePressure;
+            simulationState.breathPhase = 'expiration'; simulationState.maxVolumeThisCycle = simulationState.currentVolume;
+            simulationState.minVolumeThisCycle = simulationState.currentVolume; simulationState.isBreathStart = true;
+            simulationState.inspHoldActive = false; simulationState.expHoldActive = false;
+            document.getElementById('inspHoldBtn').classList.remove('active');
+            document.getElementById('expHoldBtn').classList.remove('active');
+            simulationState.pip = 0; simulationState.pplat = 0; simulationState.map = 0;
+            simulationState.totalPeep = basePressure; simulationState.inhaledVt = 0;
+            simulationState.exhaledVt = 0; simulationState.minuteVentilation = 0;
+            simulationState.staticCompliance = 0; simulationState.dynamicCompliance = 0;
+            simulationState.sumPressureForMAP = 0; simulationState.mapSampleCount = 0;
+            simulationState.pplatMeasuredInSequence = null; simulationState.vtAtPplatInSequence = null;
+            simulationState.pipForDynamicCompliance = 0; simulationState.vtForDynamicCompliance = 0;
+            simulationState.volumeAtStartOfRelease = 0;
+            simulationState.sweepDisplayIndex = 0;
+
+            if (simulationState.mode === 'PRVC') {
+                const prvcMaxP = parseFloat(document.getElementById('maxPressurePRVC').value) || 35;
+                simulationState.currentInspiratoryPressurePRVC = Math.min(10, prvcMaxP); // Start with 10 or Pmax if Pmax is lower
+                document.getElementById('prvcCurrentInspPDisplay').textContent = simulationState.currentInspiratoryPressurePRVC.toFixed(1);
+            }
+
+
+            const initialSweepData = () => new Array(MAX_DATA_POINTS_DISPLAY).fill(null).map((_, i) => ({x: parseFloat((i * DT_SIM).toFixed(3)), y: null }));
+            [pressureChart, flowChart, volumeChart].forEach(chart => {
+                if (chart && chart.data && chart.data.datasets[0]) {
+                    chart.data.datasets[0].data = initialSweepData();
+                    chart.update('none');
+                }
+            });
+            updateMonitoredDisplays();
+        }
+
+        function setupAndStartSimulation() {
+             if (simulationState.isRunning) { cancelAnimationFrame(animationFrameId); }
+            readAndUpdateSettings(); resetSimulationStateAndMonitoredValues();
+            simulationState.isRunning = true;
+            document.getElementById('statusDisplay').textContent = "Running";
+            document.getElementById('statusDisplay').style.color = "green";
+            document.getElementById('pausePlayBtn').textContent = 'Pause Waveforms';
+            animationFrameId = requestAnimationFrame(simulationLoop);
+        }
+
+        function updateMonitoredDisplays() {
+            document.getElementById('pipDisplay').textContent = simulationState.pip.toFixed(1);
+            document.getElementById('pplatDisplay').textContent = simulationState.pplat.toFixed(1);
+            document.getElementById('mapDisplay').textContent = simulationState.map.toFixed(1);
+            document.getElementById('totalPeepDisplay').textContent = simulationState.totalPeep.toFixed(1);
+            document.getElementById('inhVtDisplay').textContent = simulationState.inhaledVt.toFixed(0);
+            document.getElementById('exhVtDisplay').textContent = simulationState.exhaledVt.toFixed(0);
+            document.getElementById('mvDisplay').textContent = simulationState.minuteVentilation.toFixed(1);
+            document.getElementById('rrDisplay').textContent = simulationState.currentRespiratoryRate.toFixed(0);
+            document.getElementById('cstatDisplay').textContent = simulationState.staticCompliance.toFixed(1);
+            document.getElementById('cdynDisplay').textContent = simulationState.dynamicCompliance.toFixed(1);
+        }
+
+        function simulationLoop() {
+            if (!simulationState.isRunning) { return; }
+
+            simulationState.simulationTime += DT_SIM;
+            let p_calc = 0, fLPS_calc = 0, v_calc = 0;
+            let previousVolume = simulationState.currentVolume;
+
+            if (simulationState.isBreathStart) {
+                simulationState.isBreathStart = false;
+                simulationState.maxVolumeThisCycle = previousVolume;
+                simulationState.minVolumeThisCycle = previousVolume;
+                simulationState.pip = (simulationState.mode === 'APRV') ? simulationState.pHightAprv : simulationState.peep;
+                simulationState.exhaledVt = 0; // Reset for new breath cycle
+                if (!simulationState.inspHoldActive && !simulationState.expHoldActive) {
+                    simulationState.pplatMeasuredInSequence = null; simulationState.vtAtPplatInSequence = null;
+                }
+            }
+            let currentTargetPressure = 0;
+            if (simulationState.mode === 'APRV') {
+                simulationState.timeInAprvPhase += DT_SIM; let spont_fLPS = 0;
+                if (simulationState.currentAprvPhase === 'high') {
+                    currentTargetPressure = simulationState.pHightAprv; simulationState.breathPhase = 'aprv_thigh';
+                    if (simulationState.inspHoldActive) simulationState.breathPhase = 'insp_hold';
+                    const spontCycleTime = 60 / SPONT_RR_APRV;
+                    spont_fLPS = (Math.PI * SPONT_VT_APRV / 1000 / (spontCycleTime / 2)) * Math.sin(2 * Math.PI * (simulationState.simulationTime % spontCycleTime) / spontCycleTime);
+                    if (simulationState.inspHoldActive) {
+                        fLPS_calc = 0; v_calc = previousVolume;
+                        let volAbovePeepHold = v_calc - (simulationState.compliance * simulationState.pLowAprv);
+                        p_calc = simulationState.pLowAprv + (volAbovePeepHold > 0 ? volAbovePeepHold / simulationState.compliance : 0);
+                        simulationState.pplat = p_calc;
+                        if (simulationState.timeInAprvPhase >= simulationState.inspHoldStartTime + simulationState.inspHoldDuration) {
+                            simulationState.inspHoldActive = false; document.getElementById('inspHoldBtn').classList.remove('active');
+                            simulationState.pplatMeasuredInSequence = simulationState.pplat; simulationState.vtAtPplatInSequence = simulationState.inhaledVt;
+                        }
+                    } else {
+                        let alveolarPressure = previousVolume / simulationState.compliance;
+                        let flowToMaintainPhigh = (simulationState.resistance > 0) ? (currentTargetPressure - alveolarPressure) / simulationState.resistance : ( (currentTargetPressure > alveolarPressure) ? 2 : 0 );
+                        fLPS_calc = flowToMaintainPhigh + spont_fLPS; v_calc = previousVolume + (fLPS_calc * DT_SIM * 1000); p_calc = currentTargetPressure;
+                    }
+                    if (p_calc > simulationState.pip) simulationState.pip = p_calc;
+                    if (!simulationState.inspHoldActive && simulationState.timeInAprvPhase >= simulationState.tHighAprv) {
+                        simulationState.currentAprvPhase = 'low'; simulationState.timeInAprvPhase = 0;
+                        simulationState.volumeAtStartOfRelease = previousVolume; simulationState.isBreathStart = true;
+                    }
+                } else { // APRV P-Low phase
+                    currentTargetPressure = simulationState.pLowAprv; simulationState.breathPhase = 'aprv_tlow';
+                    if (simulationState.expHoldActive) simulationState.breathPhase = 'exp_hold';
+                    if (simulationState.expHoldActive) {
+                        fLPS_calc = 0; v_calc = previousVolume; p_calc = (v_calc / simulationState.compliance);
+                        simulationState.totalPeep = Math.max(simulationState.pLowAprv, p_calc);
+                        if (simulationState.timeInAprvPhase >= simulationState.expHoldStartTime + simulationState.expHoldDuration) {
+                            simulationState.expHoldActive = false; document.getElementById('expHoldBtn').classList.remove('active');
+                            if (simulationState.pplatMeasuredInSequence !== null && simulationState.vtAtPplatInSequence !== null) {
+                                if ((simulationState.pplatMeasuredInSequence - simulationState.totalPeep) > 0) { simulationState.staticCompliance = simulationState.vtAtPplatInSequence / (simulationState.pplatMeasuredInSequence - simulationState.totalPeep);} else { simulationState.staticCompliance = 0; }
+                                simulationState.pplatMeasuredInSequence = null; simulationState.vtAtPplatInSequence = null;
+                            }
+                            if ((simulationState.pipForDynamicCompliance - simulationState.totalPeep) > 0 && simulationState.vtForDynamicCompliance > 0) {
+                                simulationState.dynamicCompliance = simulationState.vtForDynamicCompliance / (simulationState.pipForDynamicCompliance - simulationState.totalPeep); } else { simulationState.dynamicCompliance = 0; }
+                        }
+                    } else {
+                        let alveolarPressure = previousVolume / simulationState.compliance;
+                        fLPS_calc = (simulationState.resistance > 0 && alveolarPressure > currentTargetPressure) ? (alveolarPressure - currentTargetPressure) / simulationState.resistance : 0;
+                        fLPS_calc = -Math.abs(fLPS_calc); v_calc = previousVolume + (fLPS_calc * DT_SIM * 1000);
+                        v_calc = Math.max(simulationState.compliance * currentTargetPressure, v_calc); p_calc = currentTargetPressure;
+                    }
+                    if (p_calc > simulationState.pip) simulationState.pip = p_calc; // Should not happen if P-low is truly low, but for completeness
+                    if (!simulationState.expHoldActive && simulationState.timeInAprvPhase >= simulationState.tLowAprv) {
+                        simulationState.currentAprvPhase = 'high'; simulationState.timeInAprvPhase = 0;
+                        simulationState.exhaledVt = Math.max(0, simulationState.volumeAtStartOfRelease - v_calc);
+                        simulationState.isBreathStart = true;
+                    }
+                }
+                simulationState.peep = simulationState.pLowAprv; // Effective PEEP in APRV is P-low
+            } else { // Handles VC, PC, PRVC, CPAP
+                simulationState.timeInCurrentCycle += DT_SIM;
+                let currentPhase = simulationState.breathPhase;
+
+                if (simulationState.mode === 'VC') {
+                    if (simulationState.timeInCurrentCycle <= simulationState.actualInspiratoryTime) { currentPhase = 'inspiration';}
+                    else if (simulationState.timeInCurrentCycle <= simulationState.actualTotalCycleTime) { currentPhase = 'expiration';}
+                    else {
+                        if (simulationState.actualTotalCycleTime > 0) simulationState.exhaledVt = Math.max(0, simulationState.maxVolumeThisCycle - (simulationState.compliance * simulationState.peep) - (v_calc - (simulationState.compliance * simulationState.peep)) ); // v_calc here is end-expiratory
+                        simulationState.isBreathStart = true; simulationState.timeInCurrentCycle = 0; currentPhase = 'inspiration';
+                    }
+                } else if (simulationState.mode === 'PC') {
+                    if (simulationState.timeInCurrentCycle <= simulationState.actualInspiratoryTime) { currentPhase = 'inspiration_PC';}
+                    else if (simulationState.timeInCurrentCycle <= simulationState.actualTotalCycleTime) { currentPhase = 'expiration_PC';}
+                    else {
+                        if (simulationState.actualTotalCycleTime > 0) simulationState.exhaledVt = Math.max(0, simulationState.maxVolumeThisCycle - (simulationState.compliance * simulationState.peep) - (v_calc-(simulationState.compliance * simulationState.peep)) );
+                        simulationState.isBreathStart = true; simulationState.timeInCurrentCycle = 0; currentPhase = 'inspiration_PC';
+                    }
+                } else if (simulationState.mode === 'PRVC') {
+                    if (simulationState.timeInCurrentCycle <= simulationState.actualInspiratoryTime) {
+                        currentPhase = 'inspiration_PRVC';
+                    } else if (simulationState.timeInCurrentCycle <= simulationState.actualTotalCycleTime) {
+                        currentPhase = 'expiration_PRVC';
+                    } else { // End of PRVC breath cycle
+                        const deliveredVtLastBreath = simulationState.inhaledVt; // From the breath that just fully completed
+                         if (simulationState.actualTotalCycleTime > 0) simulationState.exhaledVt = Math.max(0, simulationState.maxVolumeThisCycle - (simulationState.compliance * simulationState.peep) - (v_calc-(simulationState.compliance * simulationState.peep)) );
+
+
+                        if (deliveredVtLastBreath > 0 && simulationState.actualTotalCycleTime > 0 && !simulationState.inspHoldActive && !simulationState.expHoldActive) { // Only adapt on normal breaths
+                            const targetVt = simulationState.tidalVolumePRVC;
+                            const pressureStep = 1; // cmH2O
+                            const errorPercentage = (deliveredVtLastBreath - targetVt) / targetVt;
+
+                            if (errorPercentage < -0.05) { // Delivered < 95% of target
+                                simulationState.currentInspiratoryPressurePRVC += pressureStep;
+                            } else if (errorPercentage > 0.05) { // Delivered > 105% of target
+                                simulationState.currentInspiratoryPressurePRVC -= pressureStep;
+                            }
+
+                            simulationState.currentInspiratoryPressurePRVC = Math.max(1, simulationState.currentInspiratoryPressurePRVC);
+                            simulationState.currentInspiratoryPressurePRVC = Math.min(simulationState.maxPressurePRVC, simulationState.currentInspiratoryPressurePRVC);
+                            document.getElementById('prvcCurrentInspPDisplay').textContent = simulationState.currentInspiratoryPressurePRVC.toFixed(1);
+                        }
+                        simulationState.isBreathStart = true;
+                        simulationState.timeInCurrentCycle = 0;
+                        currentPhase = 'inspiration_PRVC';
+                    }
+                } else if (simulationState.mode === 'CPAP') { currentPhase = 'cpap_spontaneous'; }
+
+                if (simulationState.inspHoldActive) currentPhase = 'insp_hold';
+                if (simulationState.expHoldActive) currentPhase = 'exp_hold';
+                simulationState.breathPhase = currentPhase;
+
+                switch (simulationState.breathPhase) {
+                    case 'inspiration':
+                        fLPS_calc = simulationState.vcInspiratoryFlowLPS; v_calc = previousVolume + (fLPS_calc * DT_SIM * 1000);
+                        let targetVolVC = simulationState.tidalVolumeVC + (simulationState.compliance * simulationState.peep);
+                        v_calc = Math.min(v_calc, targetVolVC );
+                        let volAbovePEEPVC = v_calc - (simulationState.compliance * simulationState.peep);
+                        p_calc = simulationState.peep + (fLPS_calc * simulationState.resistance) + (volAbovePEEPVC > 0 ? volAbovePEEPVC / simulationState.compliance : 0);
+                        break;
+                    case 'insp_hold':
+                        fLPS_calc = 0; v_calc = previousVolume;
+                        let volAbovePeepHold = v_calc - (simulationState.compliance * simulationState.peep);
+                        p_calc = simulationState.peep + (volAbovePeepHold > 0 ? volAbovePeepHold / simulationState.compliance : 0);
+                        simulationState.pplat = p_calc;
+                        if (simulationState.timeInCurrentCycle >= simulationState.inspHoldStartTime + simulationState.inspHoldDuration) {
+                            simulationState.inspHoldActive = false; document.getElementById('inspHoldBtn').classList.remove('active');
+                            simulationState.pplatMeasuredInSequence = simulationState.pplat; simulationState.vtAtPplatInSequence = simulationState.inhaledVt;
+                            // Don't advance timeInCurrentCycle here for PRVC/PC, let the normal cycle progression take over
+                            if(simulationState.mode === 'VC') simulationState.timeInCurrentCycle = simulationState.actualInspiratoryTime + DT_SIM;
+                        }
+                        break;
+                    case 'expiration': case 'expiration_PC': case 'expiration_PRVC':
+                        let drivingPToExp = (previousVolume - (simulationState.compliance * simulationState.peep)) / simulationState.compliance;
+                        let RC = simulationState.resistance * (simulationState.compliance / 1000); // Compliance in L/cmH2O for RC
+                        fLPS_calc = (RC > 0 && drivingPToExp > 0) ? -(drivingPToExp / simulationState.resistance) : 0;
+                        fLPS_calc = Math.min(0, fLPS_calc); v_calc = previousVolume + (fLPS_calc * DT_SIM * 1000);
+                        v_calc = Math.max(simulationState.compliance * simulationState.peep, v_calc);
+                        p_calc = simulationState.peep + ((v_calc - (simulationState.compliance * simulationState.peep)) / simulationState.compliance);
+                        p_calc = Math.max(simulationState.peep,p_calc);
+                        break;
+                    case 'exp_hold':
+                        fLPS_calc = 0; v_calc = previousVolume; p_calc = (v_calc / simulationState.compliance);
+                        simulationState.totalPeep = Math.max(simulationState.peep, p_calc);
+                        if (simulationState.timeInCurrentCycle >= simulationState.expHoldStartTime + simulationState.expHoldDuration ||
+                            (simulationState.mode !== 'CPAP' && simulationState.timeInCurrentCycle >= simulationState.actualTotalCycleTime - DT_SIM) ) {
+                            simulationState.expHoldActive = false; document.getElementById('expHoldBtn').classList.remove('active');
+                            if (simulationState.pplatMeasuredInSequence !== null && simulationState.vtAtPplatInSequence !== null) {
+                                if ((simulationState.pplatMeasuredInSequence - simulationState.totalPeep) > 0) { simulationState.staticCompliance = simulationState.vtAtPplatInSequence / (simulationState.pplatMeasuredInSequence - simulationState.totalPeep);}
+                                else { simulationState.staticCompliance = 0; }
+                                simulationState.pplatMeasuredInSequence = null; simulationState.vtAtPplatInSequence = null;
+                            }
+                            if ((simulationState.pipForDynamicCompliance - simulationState.totalPeep) > 0 && simulationState.vtForDynamicCompliance > 0) { simulationState.dynamicCompliance = simulationState.vtForDynamicCompliance / (simulationState.pipForDynamicCompliance - simulationState.totalPeep); }
+                            else { simulationState.dynamicCompliance = 0; }
+                            if (simulationState.mode !== 'CPAP' && simulationState.timeInCurrentCycle >= simulationState.actualTotalCycleTime - DT_SIM && simulationState.actualTotalCycleTime > 0) { simulationState.isBreathStart = true; simulationState.timeInCurrentCycle = 0;}
+                        }
+                        break;
+                    case 'inspiration_PC':
+                        p_calc = simulationState.peep + simulationState.inspiratoryPressurePC;
+                        let alvPAbovePeepPC = (previousVolume - (simulationState.compliance * simulationState.peep)) / simulationState.compliance;
+                        let pGradPC = simulationState.inspiratoryPressurePC - alvPAbovePeepPC;
+                        fLPS_calc = (simulationState.resistance > 0) ? (pGradPC / simulationState.resistance) : (pGradPC > 0 ? 10 : 0);
+                        fLPS_calc = Math.max(0, fLPS_calc); v_calc = previousVolume + (fLPS_calc * DT_SIM * 1000);
+                        break;
+                    case 'inspiration_PRVC':
+                        p_calc = simulationState.peep + simulationState.currentInspiratoryPressurePRVC;
+                        let alvPAbovePeepPRVC = (previousVolume - (simulationState.compliance * simulationState.peep)) / simulationState.compliance;
+                        let pGradPRVC = simulationState.currentInspiratoryPressurePRVC - alvPAbovePeepPRVC;
+                        fLPS_calc = (simulationState.resistance > 0) ? (pGradPRVC / simulationState.resistance) : (pGradPRVC > 0 ? 10 : 0);
+                        fLPS_calc = Math.max(0, fLPS_calc);
+                        v_calc = previousVolume + (fLPS_calc * DT_SIM * 1000);
+                        break;
+                    case 'cpap_spontaneous':
+                        p_calc = simulationState.cpapLevel; simulationState.peep = simulationState.cpapLevel;
+                        const spontRR_cpap = SPONT_RR_APRV; const spontTC_cpap = 60 / spontRR_cpap; const spontTV_cpap = SPONT_VT_APRV;
+                        const cpapPeepVol = simulationState.compliance * simulationState.cpapLevel;
+                        fLPS_calc = (Math.PI*spontTV_cpap/1000/(spontTC_cpap/2))*Math.sin(2*Math.PI*(simulationState.simulationTime%spontTC_cpap)/spontTC_cpap);
+                        v_calc = cpapPeepVol + (spontTV_cpap/2)*(1-Math.cos(2*Math.PI*(simulationState.simulationTime%spontTC_cpap)/spontTC_cpap));
+                        if(fLPS_calc > 0.01){ if(simulationState.isBreathStart){ simulationState.maxVolumeThisCycle=v_calc; simulationState.pip=p_calc; simulationState.isBreathStart=false;} else if (v_calc > simulationState.maxVolumeThisCycle) { simulationState.maxVolumeThisCycle=v_calc; } simulationState.inhaledVt = Math.max(0, simulationState.maxVolumeThisCycle - cpapPeepVol); } else { if (simulationState.breathPhase !== 'cpap_spontaneous' || fLPS_calc < -0.01) {simulationState.isBreathStart = true; simulationState.exhaledVt = simulationState.inhaledVt; } } // Rough exhaled for CPAP
+                        break;
+                }
+            }
+            simulationState.currentVolume = v_calc;
+
+            if (simulationState.mode !== 'APRV') {
+                if (simulationState.breathPhase === 'inspiration' || simulationState.breathPhase === 'inspiration_PC' || simulationState.breathPhase === 'inspiration_PRVC') {
+                    if (p_calc > simulationState.pip) simulationState.pip = p_calc;
+                    if (v_calc > simulationState.maxVolumeThisCycle) simulationState.maxVolumeThisCycle = v_calc;
+                    simulationState.inhaledVt = Math.max(0, simulationState.maxVolumeThisCycle - (simulationState.compliance * simulationState.peep));
+                }
+            } else { // APRV specific PIP and InhaledVt
+                 if (simulationState.currentAprvPhase === 'high' && !simulationState.inspHoldActive) {
+                     if (p_calc > simulationState.pip) simulationState.pip = p_calc;
+                     let volumeAtPLow = simulationState.compliance * simulationState.pLowAprv;
+                     simulationState.inhaledVt = Math.max(0, simulationState.currentVolume - volumeAtPLow);
+                 } else if (simulationState.currentAprvPhase === 'low') {
+                     if (p_calc > simulationState.pip && p_calc > simulationState.pLowAprv) simulationState.pip = p_calc;
+                 }
+            }
+
+            simulationState.sumPressureForMAP += p_calc; simulationState.mapSampleCount++;
+            if (simulationState.mapSampleCount > 0) simulationState.map = simulationState.sumPressureForMAP / simulationState.mapSampleCount;
+
+            let effectiveRRForMV = simulationState.currentRespiratoryRate;
+            if(simulationState.mode === 'APRV') effectiveRRForMV = (simulationState.tHighAprv + simulationState.tLowAprv > 0) ? (60 / (simulationState.tHighAprv + simulationState.tLowAprv)) : 0;
+            else if(simulationState.mode === 'CPAP') effectiveRRForMV = SPONT_RR_APRV;
+
+            let vtForMV = simulationState.inhaledVt; // Default to measured inhaled Vt
+            if(simulationState.mode === 'APRV') vtForMV = simulationState.exhaledVt > 0 ? simulationState.exhaledVt : SPONT_VT_APRV ; // Use release volume for APRV MV
+            else if(simulationState.mode === 'CPAP') vtForMV = SPONT_VT_APRV;
+            else if(simulationState.mode === 'PRVC') vtForMV = simulationState.tidalVolumePRVC; // Use target Vt for PRVC MV calculation
+
+            if (effectiveRRForMV > 0 && vtForMV > 0) { simulationState.minuteVentilation = (vtForMV / 1000) * effectiveRRForMV; }
+            else { simulationState.minuteVentilation = 0; }
+
+
+            const currentIndex = simulationState.sweepDisplayIndex;
+            const final_p = (isNaN(p_calc) || !isFinite(p_calc)) ? null : p_calc;
+            const final_f = (isNaN(fLPS_calc) || !isFinite(fLPS_calc)) ? null : fLPS_calc * 60;
+            const effectivePeepVol = simulationState.compliance * ((simulationState.mode === 'APRV') ? simulationState.pLowAprv : simulationState.peep);
+            const final_v = (isNaN(v_calc) || !isFinite(v_calc)) ? null : Math.max(0, v_calc - effectivePeepVol);
+
+            if (currentIndex < MAX_DATA_POINTS_DISPLAY) {
+                pressureChart.data.datasets[0].data[currentIndex].y = final_p;
+                flowChart.data.datasets[0].data[currentIndex].y = final_f;
+                volumeChart.data.datasets[0].data[currentIndex].y = final_v;
+            }
+
+            const nextIndexToClear = (currentIndex + 1) % MAX_DATA_POINTS_DISPLAY;
+            if (pressureChart.data.datasets[0].data[nextIndexToClear]) {
+                pressureChart.data.datasets[0].data[nextIndexToClear].y = null;
+                flowChart.data.datasets[0].data[nextIndexToClear].y = null;
+                volumeChart.data.datasets[0].data[nextIndexToClear].y = null;
+            }
+
+            simulationState.sweepDisplayIndex = (currentIndex + 1) % MAX_DATA_POINTS_DISPLAY;
+
+            pressureChart.update('none');
+            flowChart.update('none');
+            volumeChart.update('none');
+
+            if (simulationState.simulationTime * 1000 % 200 < DT_SIM * 1000) { // ~5 times per second
+                 updateMonitoredDisplays();
+                 if (simulationState.mode === 'PRVC') {
+                    document.getElementById('prvcCurrentInspPDisplay').textContent = simulationState.currentInspiratoryPressurePRVC.toFixed(1);
+                }
+            }
+            animationFrameId = requestAnimationFrame(simulationLoop);
+        }
+
+        window.onload = () => {
+            initializeCharts(); updateModeDisplay(); readAndUpdateSettings();
+            document.getElementById('statusDisplay').textContent = "Idle";
+            document.getElementById('statusDisplay').style.color = "gray";
+            document.getElementById('pausePlayBtn').textContent = 'Apply & Run Sim'; // Changed initial text
+            updateMonitoredDisplays();
+             // Ensure pause/play button logic correctly handles initial state
+            const pausePlayBtn = document.getElementById('pausePlayBtn');
+            pausePlayBtn.onclick = () => { // Re-assign to ensure correct behavior
+                if (!animationFrameId && !simulationState.isRunning) { // If idle, treat as first run
+                    setupAndStartSimulation();
+                } else if (simulationState.isRunning) {
+                    simulationState.isRunning = false; cancelAnimationFrame(animationFrameId);
+                    pausePlayBtn.textContent = 'Play Waveforms';
+                    document.getElementById('statusDisplay').textContent = "Paused"; document.getElementById('statusDisplay').style.color = "orange";
+                } else { // Is paused, so play
+                    simulationState.isRunning = true; animationFrameId = requestAnimationFrame(simulationLoop);
+                    pausePlayBtn.textContent = 'Pause Waveforms';
+                    document.getElementById('statusDisplay').textContent = "Running"; document.getElementById('statusDisplay').style.color = "green";
+                }
+            };
+            document.querySelector('button[onclick="setupAndStartSimulation()"]').textContent = 'Apply & Run Simulation';
+
+            // Add event listener for the new back to home button
+            const backToHomeBtnVent = document.getElementById('backToHomeBtnVent');
+            if (backToHomeBtnVent) {
+                backToHomeBtnVent.addEventListener('click', () => {
+                    window.location.href = 'index.html'; // Or the specific path to your main page
+                });
+            }
+        };
+    </script>
+</body>
+</html>

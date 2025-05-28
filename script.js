@@ -4,6 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const firstNameInput = document.getElementById('firstNameInput');
     const startButton = document.getElementById('startButton');
 
+    const modeSelectionScreen = document.getElementById('modeSelectionScreen');
+    const bipapModeBtn = document.getElementById('bipapModeBtn');
+    const ventilatorModeBtn = document.getElementById('ventilatorModeBtn');
+    const userNameModeScreen = document.getElementById('userNameModeScreen');
+
     const scenarioSelectionScreen = document.getElementById('scenarioSelectionScreen');
     const scenarioWelcomeTitle = document.getElementById('scenarioWelcomeTitle');
     const scenarioGrid = document.getElementById('scenarioGrid');
@@ -86,6 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let simulatedVt = BASE_VT + (currentPs * VT_PER_PS);
         // MODIFIED: Tidal volume capped at 1000 mL
         simulatedVt = Math.round(Math.max(150, Math.min(1000, simulatedVt))); //
+        if (currentPs < 0) simulatedVt = 150; // Ensure minimum Vt if PS is negative (IPAP < EPAP)
+
 
         const paco2ChangeFactor = 7;
         let paco2Change = (initialPsScenario - currentPs) * paco2ChangeFactor;
@@ -348,11 +355,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function showModeSelection() {
+        welcomeScreen.style.display = 'none';
+        scenarioSelectionScreen.style.display = 'none';
+        mainSimulatorScreen.style.display = 'none';
+        feedbackPopup.style.display = 'none';
+        modeSelectionScreen.style.display = 'flex';
+        userNameModeScreen.textContent = userName;
+    }
+
+
     function showScenarioSelection() {
         mainSimulatorScreen.style.display = 'none';
         feedbackPopup.style.display = 'none';
+        modeSelectionScreen.style.display = 'none';
         scenarioSelectionScreen.style.display = 'flex';
-        scenarioWelcomeTitle.textContent = `Welcome, RT ${userName}!`;
+        scenarioWelcomeTitle.textContent = `Welcome, RT ${userName}! Choose a BIPAP Scenario:`;
         generateScenarioCards();
     }
 
@@ -361,11 +379,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (name) {
             userName = name;
             rtNamePlaceholder.textContent = userName;
-            welcomeScreen.style.display = 'none';
-            showScenarioSelection();
+            showModeSelection();
         } else {
             alert('Please enter your first name to begin!');
         }
+    });
+
+    bipapModeBtn.addEventListener('click', () => {
+        showScenarioSelection();
+    });
+
+    ventilatorModeBtn.addEventListener('click', () => {
+        window.location.href = 'vent.html';
     });
 
     submitBtn.addEventListener('click', () => {
@@ -418,12 +443,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     nextScenarioBtn.addEventListener('click', loadNextScenario);
     repeatScenarioBtn.addEventListener('click', repeatCurrentScenario);
-    backToSelectionBtn.addEventListener('click', showScenarioSelection);
+
+    // Modified backToSelectionBtn to go to mode selection
+    backToSelectionBtn.addEventListener('click', () => {
+        feedbackPopup.style.display = 'none';
+        showModeSelection();
+    });
+
 
     if (backToScenarioSelectionFromSimBtn) {
-        backToScenarioSelectionFromSimBtn.addEventListener('click', showScenarioSelection);
+        // Modified to go to mode selection
+        backToScenarioSelectionFromSimBtn.addEventListener('click', () => {
+            mainSimulatorScreen.style.display = 'none';
+            showModeSelection();
+        });
     }
 
+    // Initial screen states
+    welcomeScreen.style.display = 'flex'; // Start with welcome screen
+    modeSelectionScreen.style.display = 'none';
     mainSimulatorScreen.style.display = 'none';
     scenarioSelectionScreen.style.display = 'none';
 });
