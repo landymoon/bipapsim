@@ -318,20 +318,21 @@
             }
         });
 
-        const pausePlayBtn = document.getElementById('pausePlayBtn');
-        pausePlayBtn.addEventListener('click', () => {
-            if (simulationState.isRunning) {
-                simulationState.isRunning = false; cancelAnimationFrame(animationFrameId);
-                pausePlayBtn.textContent = 'Play Waveforms';
-                document.getElementById('statusDisplay').textContent = "Paused"; document.getElementById('statusDisplay').style.color = "orange";
-            } else if (animationFrameId) { // Only if simulation was set up
-                simulationState.isRunning = true; animationFrameId = requestAnimationFrame(simulationLoop);
-                pausePlayBtn.textContent = 'Pause Waveforms';
-                document.getElementById('statusDisplay').textContent = "Running"; document.getElementById('statusDisplay').style.color = "green";
-            } else { // If trying to play from idle without applying settings first
-                 setupAndStartSimulation(); // Apply and run
-            }
-        });
+        // REMOVED PROBLEMATIC addEventListener for pausePlayBtn
+        // const pausePlayBtn = document.getElementById('pausePlayBtn');
+        // pausePlayBtn.addEventListener('click', () => {
+        //     if (simulationState.isRunning) {
+        //         simulationState.isRunning = false; cancelAnimationFrame(animationFrameId);
+        //         pausePlayBtn.textContent = 'Play Waveforms';
+        //         document.getElementById('statusDisplay').textContent = "Paused"; document.getElementById('statusDisplay').style.color = "orange";
+        //     } else if (animationFrameId) { // Only if simulation was set up
+        //         simulationState.isRunning = true; animationFrameId = requestAnimationFrame(simulationLoop);
+        //         pausePlayBtn.textContent = 'Pause Waveforms';
+        //         document.getElementById('statusDisplay').textContent = "Running"; document.getElementById('statusDisplay').style.color = "green";
+        //     } else { // If trying to play from idle without applying settings first
+        //          setupAndStartSimulation(); // Apply and run
+        //     }
+        // });
 
         function readAndUpdateSettings() {
             const oldMode = simulationState.mode;
@@ -771,20 +772,24 @@
             document.getElementById('statusDisplay').textContent = "Idle";
             document.getElementById('statusDisplay').style.color = "gray";
             document.getElementById('pausePlayBtn').textContent = 'Apply & Run Sim'; // Changed initial text
-            updateMonitoredDisplays();
-             // Ensure pause/play button logic correctly handles initial state
+
+            // Ensure pause/play button logic correctly handles initial state via onclick
             const pausePlayBtn = document.getElementById('pausePlayBtn');
-            pausePlayBtn.onclick = () => { // Re-assign to ensure correct behavior
+            pausePlayBtn.onclick = () => {
                 if (!animationFrameId && !simulationState.isRunning) { // If idle, treat as first run
                     setupAndStartSimulation();
-                } else if (simulationState.isRunning) {
-                    simulationState.isRunning = false; cancelAnimationFrame(animationFrameId);
+                } else if (simulationState.isRunning) { // If running, pause
+                    simulationState.isRunning = false;
+                    cancelAnimationFrame(animationFrameId);
                     pausePlayBtn.textContent = 'Play Waveforms';
-                    document.getElementById('statusDisplay').textContent = "Paused"; document.getElementById('statusDisplay').style.color = "orange";
+                    document.getElementById('statusDisplay').textContent = "Paused";
+                    document.getElementById('statusDisplay').style.color = "orange";
                 } else { // Is paused, so play
-                    simulationState.isRunning = true; animationFrameId = requestAnimationFrame(simulationLoop);
+                    simulationState.isRunning = true;
+                    animationFrameId = requestAnimationFrame(simulationLoop);
                     pausePlayBtn.textContent = 'Pause Waveforms';
-                    document.getElementById('statusDisplay').textContent = "Running"; document.getElementById('statusDisplay').style.color = "green";
+                    document.getElementById('statusDisplay').textContent = "Running";
+                    document.getElementById('statusDisplay').style.color = "green";
                 }
             };
             document.querySelector('button[onclick="setupAndStartSimulation()"]').textContent = 'Apply & Run Simulation';
